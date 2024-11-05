@@ -1,0 +1,12 @@
+.Options{
+    margin-left: 300px;
+    width: (100%-300px);
+    display: flex;
+    justify-content: center; 
+}
+.Content-Options{
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 50px;
+}

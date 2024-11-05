@@ -1,0 +1,15 @@
+.active {
+    background-color: #ffffff;
+    border-radius: 15px;
+}
+
+.option-nav.active .nav-button {
+    font-weight: 400;
+    
+    color: black;
+}
+
+.option-nav.active .img-active{
+    padding-left: 5px;
+    color: black;
+}
