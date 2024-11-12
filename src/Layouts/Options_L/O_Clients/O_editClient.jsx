@@ -7,22 +7,7 @@ import Box_Text_Value from  '../../../Components/CS_General/Form Box/Box_Text/Bo
 function O_editClient() {
 
   return (
-    <div className='Options'>
-      <div className='Content-Options'>
-          <form action="#" method="post">
-            <C_Title nameTitle={"Editar"}/>
-            <Box_Text_Value id="editDni" Label="Dni"/>
-            <Box_Text_Value id="editPrimerNombre" Label="Primer Nombre"/>
-            <Box_Text_Value id="editSegundoNombre" Label="Segundo Nombre"/>
-            <Box_Text_Value id="editPrimerApellido" Label="Primer Apellido"/>
-            <Box_Text_Value id="editSegundoApellido" Label="Segundo Apellido"/>
-            <Box_Text_Value id="editDireccion" Label="Dirección"/>
-            <Box_Text_Value id="editTelefono" Label="Telefono"/>
-            <Btn_Save nameId={"editCliente"} showContent='text+icon'/>
-          </form>
-          
-      </div>
-    </div>
+    <div></div>
   )
 }
 export default O_editClient

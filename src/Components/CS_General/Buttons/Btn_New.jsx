@@ -1,25 +1,21 @@
 import React from 'react'
 import "./Buttons.css"
 
-function Btn_New({nameId, name, showContent = 'icon'}) {
+function Btn_New({nameId, showContent = 'icon', onNew}) {
     return (
-    <button id={nameId} type="button" className={`btn btn-success ${showContent}`}>
-        {showContent === 'icon' && (
-            <span className="material-symbols-outlined">Add</span>
-        )}
-        {showContent === 'text+icon' && (
-        <>
-            <span>Añadir {name}</span>
-            <span className="material-symbols-outlined">Add</span>
-        </>
-        )}
-        {showContent === 'icon+text' && (
-        <>
-            <span className="material-symbols-outlined">Add</span>
-            <span>Añadir {name}</span>
-        </>
-        )}
-    </button>
+    <div className='Btn' style={{ display: 'flex', justifyContent: 'center' }}>
+        <button onClick={onNew} id={nameId} name={nameId} type="button" className={`btn btn-success ${showContent}`}>
+            {showContent === 'icon' && (
+                <span className="material-symbols-outlined">add</span>
+            )}
+            {showContent === 'text+icon' && (
+                <>
+                    <span>Nuevo</span>
+                    <span className="material-symbols-outlined">add</span>
+                </>
+            )}
+        </button>
+    </div>
     )
 }
 

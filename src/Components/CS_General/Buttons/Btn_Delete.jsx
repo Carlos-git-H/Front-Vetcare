@@ -1,9 +1,14 @@
-import React from 'react'
-import "./Buttons.css"
+import React from 'react';
+import "./Buttons.css";
 
-function Btn_Delete({nameId, showContent = 'icon'}) {
+function Btn_Delete({ nameId, showContent = 'icon', onDelete }) {
   return (
-    <button id={nameId} type="button" className={`btn btn-danger ${showContent}`}>
+    <button 
+      id={nameId} 
+      type="button" 
+      className={`btn btn-danger ${showContent}`} 
+      onClick={() => onDelete(nameId)} 
+    >
       {showContent === 'icon' && (
         <span className="material-symbols-outlined">delete</span>
       )}
@@ -21,7 +26,7 @@ function Btn_Delete({nameId, showContent = 'icon'}) {
         </>
       )}
     </button>
-  )
+  );
 }
 
-export default Btn_Delete
+export default Btn_Delete;
