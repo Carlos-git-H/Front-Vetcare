@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import "../../../Layouts/Layouts.css";
 import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
-import HiddenInput from '../../../Components/CS_General/Form Box/Box_Text/HiddenInput';
 
-function ModalEditService({ serviceId, onClose, onUpdate }) {
+function ModalNewService({ onClose, onUpdate }) {
     const [serviceData, setServiceData] = useState({
         name: '',
         categoryName: '',
@@ -22,29 +21,6 @@ function ModalEditService({ serviceId, onClose, onUpdate }) {
     const [categoryError, setCategoryError] = useState(null); // Error al buscar categoría
     const [especieData, setEspecieData] = useState(null); // Datos de la especie encontrada
     const [especieError, setEspecieError] = useState(null); // Error al buscar especie
-
-    useEffect(() => {
-        if (serviceId) {
-            fetch(`http://localhost:8080/api/services/${serviceId}`)
-                .then(response => response.json())
-                .then(data => {
-                    setServiceData({
-                        name: data.name,
-                        categoryName: data.category.name,
-                        categoryId: data.category.idCategory,
-                        especieName: data.especie.name,
-                        especieId: data.especie.idEspecie,
-                        description: data.description,
-                        recommendedAge: data.recommendedAge,
-                        recommendedFrequency: data.recommendedFrequency,
-                        price: data.price,
-                        dirImage: data.dirImage,
-                        status: data.status,
-                    });
-                })
-                .catch(error => console.error("Error al obtener los datos del servicio:", error));
-        }
-    }, [serviceId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -128,12 +104,12 @@ function ModalEditService({ serviceId, onClose, onUpdate }) {
         e.preventDefault();
 
         if (!serviceData.categoryId || !serviceData.especieId) {
-            alert("Por favor, busque y seleccione una categoría y una especie antes de guardar los cambios.");
+            alert("Por favor, busque y seleccione una categoría y una especie antes de crear el servicio.");
             return;
         }
 
-        fetch(`http://localhost:8080/api/services/update/${serviceId}`, {
-            method: 'PUT',
+        fetch('http://localhost:8080/api/services', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -145,18 +121,18 @@ function ModalEditService({ serviceId, onClose, onUpdate }) {
         })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error("Error al actualizar el servicio.");
+                    throw new Error("Error al crear el servicio.");
                 }
                 return response.text();
             })
             .then(() => {
-                alert("Servicio actualizado exitosamente.");
+                alert("Servicio creado exitosamente.");
                 onUpdate();
                 onClose();
             })
             .catch(error => {
-                console.error("Error al actualizar el servicio:", error);
-                alert("Error al actualizar el servicio.");
+                console.error("Error al crear el servicio:", error);
+                alert("Error al crear el servicio.");
             });
     };
 
@@ -165,7 +141,7 @@ function ModalEditService({ serviceId, onClose, onUpdate }) {
             <div className="modal-dialog">
                 <div className="modal-content">
                     <div className="modal-header">
-                        <h5 className="modal-title">Editar Servicio</h5>
+                        <h5 className="modal-title">Nuevo Servicio</h5>
                         <button
                             type="button"
                             className="btn-close"
@@ -265,7 +241,7 @@ function ModalEditService({ serviceId, onClose, onUpdate }) {
                                 Cancelar
                             </button>
                             <button type="submit" className="btn btn-primary">
-                                Guardar Cambios
+                                Crear Servicio
                             </button>
                         </div>
                     </form>
@@ -275,4 +251,4 @@ function ModalEditService({ serviceId, onClose, onUpdate }) {
     );
 }
 
-export default ModalEditService;
+export default ModalNewService;

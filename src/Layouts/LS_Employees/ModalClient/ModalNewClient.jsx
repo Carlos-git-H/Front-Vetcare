@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import "../../../Layouts/Layouts.css";
 import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
+import HiddenInput from '../../../Components/CS_General/Form Box/Box_Text/HiddenInput';
 
-function ModalNewClient({ onClose }) {
+function ModalNewClient({ onClose, onUpdate }) {
     const [clientData, setClientData] = useState({
         dni: "",
         firstName: "",
@@ -59,6 +60,7 @@ function ModalNewClient({ onClose }) {
         .then(response => response.json())
         .then(data => {
             alert("Cliente creado exitosamente!");
+            onUpdate();
             onClose();
         })
         .catch(error => console.error("Error al crear el cliente:", error));
@@ -121,12 +123,8 @@ function ModalNewClient({ onClose }) {
                                 onChange={handleChange}
                                 name="cellphone"
                             />
-                            <Box_Text_Value
-                                Label="Imagen"
-                                V_Text={clientData.dirImage}
-                                onChange={handleChange}
-                                name="dirImage"
-                            />
+                            <HiddenInput name="dirImage" value={clientData.dirImage} />
+
 
                             {/* Aquí solo mostramos los campos de usuario si 'withUser' es true */}
                             {withUser && (

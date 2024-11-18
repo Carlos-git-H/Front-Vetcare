@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import "../../Layouts/Layouts.css";
 import Box_Text_Value from '../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
+import HiddenInput from '../../Components/CS_General/Form Box/Box_Text/HiddenInput';
 
-function ModalEdit({ clientId, onClose }) {
-    const [clientData, setClientData] = useState(null);
+function ModalEdit({ clientId, onClose, onUpdate }) {
     const [formData, setFormData] = useState({
+        idClient: '',
         dni: '',
         firstName: '',
         preName: '',
@@ -12,22 +13,21 @@ function ModalEdit({ clientId, onClose }) {
         secondLastName: '',
         address: '',
         cellphone: '',
-        email: '',
+        user: null, // Incluye el usuario como un objeto si está presente
         status: '1',
-        dirImage: ''
     });
 
+    // Obtiene los datos del cliente cuando el modal se abre
     useEffect(() => {
         if (clientId) {
             fetch(`http://localhost:8080/api/clients/${clientId}`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error("Error al obtener los datos del cliente");
+                        throw new Error('Error al obtener los datos del cliente');
                     }
                     return response.json();
                 })
                 .then(data => {
-                    setClientData(data);
                     setFormData({
                         idClient: data.idClient,
                         dni: data.dni,
@@ -37,47 +37,51 @@ function ModalEdit({ clientId, onClose }) {
                         secondLastName: data.secondLastName,
                         address: data.address,
                         cellphone: data.cellphone,
-                        userId: data.user ? data.user.idUser : '',
-                        status: data.status || '1',
-                        dirImage: data.dirImage
+                        user: data.user ? { idUser: data.user.idUser } : null, // Mantén el usuario si existe
+                        status: data.status,
                     });
                 })
-                .catch(error => console.error("Error:", error));
+                .catch(error => console.error('Error al obtener los datos del cliente:', error));
         }
     }, [clientId]);
 
+    // Maneja los cambios en los inputs
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prevState => ({
+        setFormData((prevState) => ({
             ...prevState,
-            [name]: value
+            [name]: value,
         }));
     };
 
+    // Envía los datos actualizados al backend
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("Datos enviados:", JSON.stringify(formData));
-
+    
         fetch(`http://localhost:8080/api/clients/update/${clientId}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify(formData),
         })
-        .then(response => {
-            if (response.ok) {
-                return response.text();
-            }
-            throw new Error("Error al actualizar el cliente");
-        })
-        .then(message => {
-            alert(message);
-            onClose();
-        })
-        .catch(error => console.error("Error al actualizar el cliente:", error));
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Error al actualizar el cliente');
+            })
+            .then(() => {
+                alert('Cliente actualizado exitosamente');
+                onUpdate(); // Refresca la tabla
+                onClose();  // Cierra el modal
+            })
+            .catch(error => {
+                console.error('Error al actualizar el cliente:', error);
+                alert('Error al actualizar el cliente'); // Muestra un mensaje de error
+            });
     };
-
+    
     return (
         <div className="modal">
             <div className="modal-dialog">
@@ -93,23 +97,17 @@ function ModalEdit({ clientId, onClose }) {
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                            <Box_Text_Value
-                                Label="ID Cliente"
-                                V_Text={formData.idClient}
-                                readOnly
-                            />
-                            
+                            <HiddenInput name="idClient" value={formData.idClient} />
+
                             <Box_Text_Value
                                 Label="DNI"
                                 V_Text={formData.dni}
                                 name="dni"
                                 onChange={handleChange}
                                 required
-                                minLength={8}
-                                maxLength={8}
                             />
                             <Box_Text_Value
-                                Label="Nombres"
+                                Label="Primer Nombre"
                                 V_Text={formData.firstName}
                                 name="firstName"
                                 onChange={handleChange}
@@ -151,9 +149,9 @@ function ModalEdit({ clientId, onClose }) {
                             />
                             <div className="form-group">
                                 <label>Estado:</label>
-                                <select 
-                                    name="status" 
-                                    value={formData.status} 
+                                <select
+                                    name="status"
+                                    value={formData.status}
                                     onChange={handleChange}
                                     className="input-box"
                                 >
