@@ -123,6 +123,12 @@ function C_TablaMascotas() {
     const closeNewPetModal = () => {
         setIsNewPetModalOpen(false);
     };
+    const styles = {
+        flexButtonOptions: {
+            display: 'flex',
+            alignItems: 'center',
+        },
+    };
 
     return (
         <div>
@@ -205,7 +211,7 @@ function C_TablaMascotas() {
                                 <td>{calculateAge(pet.dateNac)}</td>
                                 <td>{pet.status === '1' ? "Activo" : "Muerto"}</td>
                                 <td>
-                                    <div className="flex_button_options">
+                                    <div className="flex_button_options" style={styles.flexButtonOptions}>
                                         <Btn_Edit
                                             nameId={pet.idPet}
                                             showContent="icon"

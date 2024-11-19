@@ -1,40 +1,46 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import "./V_Login.css";
-import Btn_Login from '../../Components/CS_General/Buttons/Btn_Login';
 
 function V_Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [redirect, setRedirect] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const usuarios = [
-        { correo: 'cliente@example.com', contrasena: 'cliente', tipo: 'cliente', idCliente:'2'},
-        { correo: 'empleado@example.com', contrasena: 'empleado', tipo: 'empleado', idEmpleado: '2' },
-    ];
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
-        const usuarioValido = usuarios.find(
-            (usuario) => usuario.correo === email && usuario.contrasena === password
-        );
-
-        if (usuarioValido) {
-            if (usuarioValido.tipo === 'empleado') {
-                setRedirect('/empleado');
-            } else if (usuarioValido.tipo === 'cliente') {
-                setRedirect('/cliente');
-            }
-        } else {
-            alert('Correo o contraseña incorrectos');
+      
+        try {
+          const response = await fetch('http://localhost:8080/api/authenticate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+      
+          if (!response.ok) {
+            throw new Error('Error al autenticar');
+          }
+      
+          const data = await response.json();
+      
+          // Redirigir basado en el tipo de usuario
+          if (data.type === 'empleado') {
+            setRedirect(`/empleado/${data.id}`);
+          } else if (data.type === 'cliente') {
+            setRedirect(`/cliente/${data.id}`);
+          }
+        } catch (error) {
+          console.error('Error en la autenticación:', error);
         }
-    };
+      };
+      
 
     if (redirect) {
         return <Navigate to={redirect} replace />;
     }
-    
+
     return (
         <div className='V_login'>
             <div className="login-container">
@@ -67,8 +73,10 @@ function V_Login() {
                                 required
                             />
                         </div>
-                        <button type="submit" className="login-submit-btn">Ingresar</button>
-
+                        <button type="submit" className="login-submit-btn" disabled={loading}>
+                            {loading ? 'Cargando...' : 'Ingresar'}
+                        </button>
+                        {error && <p className="login-error">{error}</p>}
                     </form>
                     <div className="login-register-link">
                         <p>¿No tienes una cuenta? <a href="/register">Regístrate aquí</a></p>
@@ -80,4 +88,3 @@ function V_Login() {
 }
 
 export default V_Login;
-

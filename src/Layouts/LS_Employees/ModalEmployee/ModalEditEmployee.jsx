@@ -1,82 +1,104 @@
 import React, { useEffect, useState } from 'react';
 import "../../../Layouts/Layouts.css";
+import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
+import HiddenInput from '../../../Components/CS_General/Form Box/Box_Text/HiddenInput';
+import SelectImput from '../../../Components/CS_General/Form Box/SelectImput/SelectImput';
 
-function ModalEditEmployee({ employeeId, onClose }) {
-    const [employeeData, setEmployeeData] = useState(null);
+function ModalEditEmployee({ employeeId, onClose, onUpdate }) {
     const [formData, setFormData] = useState({
         dni: '',
+        cmvp: '',
         firstName: '',
         preName: '',
         firstLastName: '',
         secondLastName: '',
         address: '',
         cellphone: '',
-        email: '',
-        status: '1', // 1 por defecto para "Activo"
-        dirImage: ''
+        dirImage: 'UserFoto.png',
+        status: '1',
+        rol: { idRol: '' },
+        user: { idUser: '' },
     });
 
+    const [roles, setRoles] = useState([]);
+
+    // Fetch employee data and roles when modal opens
     useEffect(() => {
         if (employeeId) {
             fetch(`http://localhost:8080/api/employees/${employeeId}`)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Error al obtener los datos del empleado");
-                    }
+                    if (!response.ok) throw new Error('Error al obtener datos del empleado');
                     return response.json();
                 })
                 .then(data => {
-                    setEmployeeData(data);
                     setFormData({
-                        idEmployee: data.idEmployee,
                         dni: data.dni,
+                        cmvp: data.cmvp,
                         firstName: data.firstName,
                         preName: data.preName,
                         firstLastName: data.firstLastName,
                         secondLastName: data.secondLastName,
                         address: data.address,
-                        cmvp: data.cmvp,
                         cellphone: data.cellphone,
-                        userId: data.user ? data.user.idUser : '',
-                        rolId: data.rol ? data.rol.idRol : '',
-                        status: data.status || '1',
-                        dirImage: data.dirImage
+                        dirImage: data.dirImage,
+                        status: data.status,
+                        rol: { idRol: data.rol.idRol },
+                        user: { idUser: data.user.idUser },
                     });
                 })
-                .catch(error => console.error("Error:", error));
+                .catch(error => console.error('Error al obtener datos del empleado:', error));
         }
+
+        fetch('http://localhost:8080/api/roles/active')
+            .then(response => {
+                if (!response.ok) throw new Error('Error al obtener roles');
+                return response.json();
+            })
+            .then(data => {
+                setRoles(data || []);
+            })
+            .catch(error => console.error('Error al obtener roles:', error));
     }, [employeeId]);
 
+    // Handle form changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
+
+        if (name === 'rol') {
+            setFormData(prevState => ({
+                ...prevState,
+                rol: { idRol: value },
+            }));
+        } else {
+            setFormData(prevState => ({
+                ...prevState,
+                [name]: value,
+            }));
+        }
     };
 
+    // Submit updated data
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("Datos enviados:", JSON.stringify(formData));
 
         fetch(`http://localhost:8080/api/employees/update/${employeeId}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
         })
-        .then(response => {
-            if (response.ok) {
+            .then(response => {
+                if (!response.ok) throw new Error('Error al actualizar el empleado');
                 return response.text();
-            }
-            throw new Error("Error al actualizar el empleado");
-        })
-        .then(message => {
-            alert(message);
-            onClose();
-        })
-        .catch(error => console.error("Error al actualizar el empleado:", error));
+            })
+            .then(() => {
+                alert('Empleado actualizado exitosamente');
+                onUpdate(); // Refresh the data in the parent component
+                onClose();  // Close the modal
+            })
+            .catch(error => {
+                console.error('Error al actualizar el empleado:', error);
+                alert('Error al actualizar el empleado');
+            });
     };
 
     return (
@@ -94,108 +116,82 @@ function ModalEditEmployee({ employeeId, onClose }) {
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-
-                            <label>ID:</label>
-                            <input type="text" value={employeeId} readOnly />
-                            <br />
-
-                            <label>User ID:</label>
-                            <input type="text" value={formData.userId} readOnly />
-                            <br />
-
-                            <label>Rol ID:</label>
-                            <input type="text" value={formData.rolId} readOnly />
-                            <br />
-
-                            <label>cmvp:</label>
-                            <input type="text" value={formData.cmvp} readOnly />
-                            <br />
-
-                            <label>Imagen:</label>
-                            <input type="text" name="dirImage" value={formData.dirImage} onChange={handleChange} />
-                            <br />
-
-                            <label>DNI:</label>
-                            <input 
-                                type="text" 
-                                name="dni" 
-                                required
-                                minLength={8}
-                                maxLength={8}
-                                value={formData.dni} 
-                                onChange={handleChange} 
-                            />
-                            <br />
-
-                            <label>Nombres:</label>
-                            <input 
-                                type="text" 
-                                name="firstName" 
-                                required
-                                value={formData.firstName} 
-                                onChange={handleChange} 
-                            />
-                            <br />
-
-                            <label>Segundo Nombre:</label>
-                            <input 
-                                type="text" 
-                                name="preName" 
-                                value={formData.preName} 
-                                onChange={handleChange} 
-                            />
-                            <br />
-
-                            <label>Primer Apellido:</label>
-                            <input 
-                                type="text" 
-                                name="firstLastName" 
-                                required
-                                value={formData.firstLastName} 
-                                onChange={handleChange} 
-                            />
-                            <br />
-
-                            <label>Segundo Apellido:</label>
-                            <input 
-                                type="text" 
-                                name="secondLastName" 
-                                required
-                                value={formData.secondLastName} 
-                                onChange={handleChange} 
-                            />
-                            <br />
-
-                            <label>Dirección:</label>
-                            <input 
-                                type="text" 
-                                name="address" 
-                                required
-                                value={formData.address} 
-                                onChange={handleChange} 
-                            />
-                            <br />
-
-                            <label>Teléfono:</label>
-                            <input 
-                                type="text" 
-                                name="cellphone" 
-                                value={formData.cellphone} 
-                                onChange={handleChange} 
-                                required
-                            />
-                            <br />
-
-                            <label>Estado:</label>
-                            <select 
-                                name="status" 
-                                value={formData.status} 
+                            <Box_Text_Value
+                                Label="DNI"
+                                V_Text={formData.dni}
+                                name="dni"
                                 onChange={handleChange}
-                            >
-                                <option value="1">Activo</option>
-                                <option value="0">Bloqueado</option>
-                            </select>
-                            
+                                required
+                            />
+                            <Box_Text_Value
+                                Label="CMVP"
+                                V_Text={formData.cmvp}
+                                name="cmvp"
+                                onChange={handleChange}
+                            />
+                            <Box_Text_Value
+                                Label="Primer Nombre"
+                                V_Text={formData.firstName}
+                                name="firstName"
+                                onChange={handleChange}
+                                required
+                            />
+                            <Box_Text_Value
+                                Label="Segundo Nombre"
+                                V_Text={formData.preName}
+                                name="preName"
+                                onChange={handleChange}
+                            />
+                            <Box_Text_Value
+                                Label="Primer Apellido"
+                                V_Text={formData.firstLastName}
+                                name="firstLastName"
+                                onChange={handleChange}
+                                required
+                            />
+                            <Box_Text_Value
+                                Label="Segundo Apellido"
+                                V_Text={formData.secondLastName}
+                                name="secondLastName"
+                                onChange={handleChange}
+                                required
+                            />
+                            <Box_Text_Value
+                                Label="Dirección"
+                                V_Text={formData.address}
+                                name="address"
+                                onChange={handleChange}
+                                required
+                            />
+                            <Box_Text_Value
+                                Label="Teléfono"
+                                V_Text={formData.cellphone}
+                                name="cellphone"
+                                onChange={handleChange}
+                                required
+                            />
+                            <SelectImput
+                                label="Rol"
+                                name="rol"
+                                value={formData.rol.idRol}
+                                options={roles.map(role => ({
+                                    value: role.idRol,
+                                    label: role.name,
+                                }))}
+                                onChange={handleChange}
+                            />
+                            <div className="form-group">
+                                <label>Estado:</label>
+                                <select
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleChange}
+                                    className="input-box"
+                                >
+                                    <option value="1">Activo</option>
+                                    <option value="0">Inactivo</option>
+                                </select>
+                            </div>
                         </div>
                         <div className="modal-footer">
                             <button
@@ -213,7 +209,7 @@ function ModalEditEmployee({ employeeId, onClose }) {
                 </div>
             </div>
         </div>
-  )
+    );
 }
 
-export default ModalEditEmployee
+export default ModalEditEmployee;
