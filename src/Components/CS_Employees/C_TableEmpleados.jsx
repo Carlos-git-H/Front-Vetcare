@@ -154,8 +154,8 @@ function C_TablaEmpleados() {
                         <th>DNI</th>
                         <th>Nombre</th>
                         <th>Apellido</th>
-                        <th>CMVP</th>
                         <th>Rol</th>
+                        <th>CMVP</th>
                         <th>Teléfono</th>
                         <th>Estado</th>
                         <th>Acciones</th>

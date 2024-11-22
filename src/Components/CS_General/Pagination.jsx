@@ -13,7 +13,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
                         onClick={() => onPageChange(currentPage - 1)}
                         disabled={currentPage === 0}
                     >
-                        Previous
+                        Anterior
                     </button>
                 </li>
 
@@ -39,7 +39,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
                         onClick={() => onPageChange(currentPage + 1)}
                         disabled={currentPage === totalPages - 1}
                     >
-                        Next
+                        Siguiente
                     </button>
                 </li>
             </ul>

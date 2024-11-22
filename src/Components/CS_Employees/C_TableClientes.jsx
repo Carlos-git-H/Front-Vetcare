@@ -97,6 +97,12 @@ function C_TableClientes() {
     const closeNewClientModal = () => {
         setIsNewClientModalOpen(false);
     };
+    const styles = {
+        flexButtonOptions: {
+            display: 'flex',
+            alignItems: 'center',
+        },
+    };
 
     return (
         <div>
@@ -179,7 +185,7 @@ function C_TableClientes() {
                                 <td>{cliente.user ? cliente.user.email : "Sin correo"}</td>
                                 <td>{cliente.status === '1' ? "Activo" : "Bloqueado"}</td>
                                 <td>
-                                    <div className="flex_button_options">
+                                    <div className="flex_button_options" style={styles.flexButtonOptions}>
                                         <Btn_Edit
                                             nameId={cliente.idClient}
                                             showContent="icon"

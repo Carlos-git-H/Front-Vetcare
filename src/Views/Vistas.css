@@ -1,0 +1,18 @@
+
+.layout-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden; 
+}
+
+.layout-aside {
+    position: fixed; 
+    top: 0;
+    bottom: 0;
+}
+
+.layout-content {
+    flex: 1; 
+    overflow-y: auto; 
+    background-color: #f5f5f5;
+}

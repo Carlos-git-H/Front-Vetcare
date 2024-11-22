@@ -99,6 +99,8 @@ function ModalEdit({ clientId, onClose, onUpdate }) {
                         <div className="modal-body">
                             <HiddenInput name="idClient" value={formData.idClient} />
 
+                            
+                            {localStorage.getItem('userType') === 'empleado' && (
                             <Box_Text_Value
                                 Label="DNI"
                                 V_Text={formData.dni}
@@ -106,6 +108,7 @@ function ModalEdit({ clientId, onClose, onUpdate }) {
                                 onChange={handleChange}
                                 required
                             />
+                            )}
                             <Box_Text_Value
                                 Label="Primer Nombre"
                                 V_Text={formData.firstName}
@@ -147,6 +150,8 @@ function ModalEdit({ clientId, onClose, onUpdate }) {
                                 onChange={handleChange}
                                 required
                             />
+                            
+                            {localStorage.getItem('userType') === 'empleado' && (
                             <div className="form-group">
                                 <label>Estado:</label>
                                 <select
@@ -159,6 +164,7 @@ function ModalEdit({ clientId, onClose, onUpdate }) {
                                     <option value="0">Bloqueado</option>
                                 </select>
                             </div>
+                            )}
                         </div>
                         <div className="modal-footer">
                             <button
@@ -171,6 +177,7 @@ function ModalEdit({ clientId, onClose, onUpdate }) {
                             <button type="submit" className="btn btn-primary">
                                 Guardar Cambios
                             </button>
+
                         </div>
                     </form>
                 </div>

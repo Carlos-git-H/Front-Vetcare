@@ -2,25 +2,47 @@ import React from 'react'
 import "./Buttons.css"
 
 function Btn_Report({nameId, showContent = 'icon'}) {
-    return (
-    <button id={nameId} type="button" className={`btn btn-primary ${showContent}`}>
-        {showContent === 'icon' && (
-            <span className="material-symbols-outlined">File</span>
-        )}
-        {showContent === 'text+icon' && (
-        <>
-            <span>Generar Reporte</span>
-            <span className="material-symbols-outlined">File</span>
-        </>
-        )}
-        {showContent === 'icon+text' && (
-        <>
-            <span className="material-symbols-outlined">File</span>
-            <span>Generar Reporte</span>
-        </>
-        )}
-    </button>
-    )
-}
 
+    return (
+        <div className="Btn" style={{ display: 'flex', justifyContent: 'center' }}>
+            <button
+                id={nameId}
+                name={nameId}
+                type="button"
+                className={`btn btn-success ${showContent}`}
+            >
+                {showContent === 'icon' && (
+                    <span
+                        className="material-symbols-outlined"
+                        style={{ color: 'white' }}
+                    >
+                        Print
+                    </span>
+                )}
+                {showContent === 'text+icon' && (
+                    <>
+                        <span style={{ color: 'white' }}>Generar Reporte</span>
+                        <span
+                            className="material-symbols-outlined"
+                            style={{ color: 'white' }}
+                        >
+                            Print
+                        </span>
+                    </>
+                )}
+                {showContent === 'icon+text' && (
+                    <>
+                        <span
+                            className="material-symbols-outlined"
+                            style={{ color: 'white' }}
+                        >
+                            Print
+                        </span>
+                        <span style={{ color: 'white' }}>Generar Reporte</span>
+                    </>
+                )}
+            </button>
+        </div>
+    );
+ }
 export default Btn_Report

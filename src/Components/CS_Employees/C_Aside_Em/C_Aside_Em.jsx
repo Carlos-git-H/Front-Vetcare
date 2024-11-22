@@ -54,12 +54,6 @@ function C_Aside_Em({nameEmpleado}) {
                 </li>
             </Link>
 
-            
-            <Link to={"notificaciones"} className="no-underline">
-                <li className="option-nav">
-                    <Btn_Nav nameOption={"Recordatorios | Notificaciones"} nameIcon={"Notifications"}/>
-                </li>
-            </Link>
 
             <Link to={"reportes"} className="no-underline">
                 <li className="option-nav">

@@ -3,41 +3,56 @@ import { Navigate } from 'react-router-dom';
 import "./V_Login.css";
 
 function V_Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [redirect, setRedirect] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [email, setEmail] = useState(''); // Estado para el email
+    const [password, setPassword] = useState(''); // Estado para la contraseña
+    const [redirect, setRedirect] = useState(null); // Estado para redirigir
+    const [error, setError] = useState(''); // Estado para manejar errores
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-      
-        try {
-          const response = await fetch('http://localhost:8080/api/authenticate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          });
-      
-          if (!response.ok) {
-            throw new Error('Error al autenticar');
-          }
-      
-          const data = await response.json();
-      
-          // Redirigir basado en el tipo de usuario
-          if (data.type === 'empleado') {
-            setRedirect(`/empleado/${data.id}`);
-          } else if (data.type === 'cliente') {
-            setRedirect(`/cliente/${data.id}`);
-          }
-        } catch (error) {
-          console.error('Error en la autenticación:', error);
-        }
-      };
-      
+        setError(''); // Limpiar cualquier error previo
 
+        console.log('Intentando autenticación con:', { email, password });
+
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            console.log('Estado de la respuesta:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error del servidor:', errorText);
+                throw new Error('Credenciales incorrectas');
+            }
+
+            const data = await response.json();
+            console.log('Datos recibidos:', data);
+
+            // Redirigir basado en el tipo de usuario
+            if (data.type === 'empleado') {
+                localStorage.setItem('userType', 'empleado'); // Almacenar tipo de usuario
+                localStorage.setItem('userId', data.id); // Almacenar ID del usuario
+                setRedirect('/empleado');
+            } else if (data.type === 'cliente') {
+                localStorage.setItem('userType', 'cliente'); // Almacenar tipo de usuario
+                localStorage.setItem('userId', data.id); // Almacenar ID del usuario
+                setRedirect('/cliente');
+            }
+        } catch (err) {
+            console.error('Error en la autenticación:', err);
+            setError('Error: ' + (err.message || 'Error desconocido.'));
+        }
+    };
+
+    // Redirigir al usuario si la autenticación fue exitosa
     if (redirect) {
+        console.log('Redirigiendo a:', redirect);
         return <Navigate to={redirect} replace />;
     }
 
@@ -50,7 +65,7 @@ function V_Login() {
                         <div className="login-form-group">
                             <label htmlFor="email">Correo</label>
                             <input
-                                type="text"
+                                type="email"
                                 id="email"
                                 name="email"
                                 className="login-input"
@@ -73,10 +88,10 @@ function V_Login() {
                                 required
                             />
                         </div>
-                        <button type="submit" className="login-submit-btn" disabled={loading}>
-                            {loading ? 'Cargando...' : 'Ingresar'}
-                        </button>
                         {error && <p className="login-error">{error}</p>}
+                        <button type="submit" className="login-submit-btn">
+                            Ingresar
+                        </button>
                     </form>
                     <div className="login-register-link">
                         <p>¿No tienes una cuenta? <a href="/register">Regístrate aquí</a></p>

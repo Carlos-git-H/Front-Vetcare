@@ -2,8 +2,9 @@ import "../../Layouts/Layouts.css";
 import C_Title from '../../Components/CS_General/C_Title/C_Title';
 import React, { useEffect, useState } from 'react';
 import Box_Text_Bloq from "../../Components/CS_General/Form Box/Box_Text/Box_Text_Bloq";
+import C_TablaHistClin from "../../Components/CS_Employees/C_TablaHistClin";
 
-function L_InfoPet_Em({ idPet }) { // Recibe idPet como argumento
+function L_InfoPet_Em({ idPet, onClose }) { // Recibe idPet y onClose como argumentos
     const [petData, setPetData] = useState(null); // Estado para almacenar los datos de la mascota
     const [error, setError] = useState(null); // Estado para manejar errores
 
@@ -25,7 +26,7 @@ function L_InfoPet_Em({ idPet }) { // Recibe idPet como argumento
                         sex: data.sex === "M" ? "Macho" : "Hembra",
                         weight: `${data.weight} kg`,
                         age: calculateAge(data.dateNac),
-                        clinicalNumber: data.idPet,
+                        idPet: data.idPet,
                         comments: data.comments,
                     });
                 })
@@ -63,8 +64,8 @@ function L_InfoPet_Em({ idPet }) { // Recibe idPet como argumento
     }
 
     return (
-        <section className='Layout'>
-            <div className='Content_Layout'>
+        <section>
+            <div>
                 <C_Title nameTitle={`Mascota: ${petData.name || "Información de Mascota"}`} />
                 <div className="row">
                     <div className="col">
@@ -88,11 +89,20 @@ function L_InfoPet_Em({ idPet }) { // Recibe idPet como argumento
                         <Box_Text_Bloq Label={"Edad"} V_Text={petData.age} />
                     </div>
                     <div className="col">
-                        <Box_Text_Bloq Label={"Nro Clinico"} V_Text={petData.clinicalNumber} />
+                        <Box_Text_Bloq Label={"Nro Clinico"} V_Text={petData.idPet} />
                     </div>
                 </div>
                 <div>
-                    <p>Comentarios: {petData.comments}</p>
+                    {/* Tabla de Historial Clínico */}
+                    <C_TablaHistClin petId={petData.idPet} />
+                </div>
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <button 
+                        className="btn btn-secondary" 
+                        onClick={onClose} // Llamar a la función para volver
+                    >
+                        Volver
+                    </button>
                 </div>
             </div>
         </section>

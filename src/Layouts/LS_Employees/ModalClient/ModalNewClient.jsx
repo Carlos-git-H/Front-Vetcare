@@ -81,12 +81,13 @@ function ModalNewClient({ onClose, onUpdate }) {
                     </div>
                     <form onSubmit={(e) => { e.preventDefault(); handleCreateClient(); }}>
                         <div className="modal-body">
-                            <Box_Text_Value
-                                Label="DNI"
-                                V_Text={clientData.dni}
-                                onChange={handleChange}
-                                name="dni"
-                            />
+                                <Box_Text_Value
+                                    Label="DNI"
+                                    V_Text={clientData.dni}
+                                    onChange={handleChange}
+                                    name="dni"
+                                />
+                            
                             <Box_Text_Value
                                 Label="Primer Nombre"
                                 V_Text={clientData.firstName}

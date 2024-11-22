@@ -14,7 +14,7 @@ function ModalEditService({ serviceId, onClose, onUpdate }) {
         recommendedAge: '',
         recommendedFrequency: '',
         price: '',
-        dirImage: 'ServiceFoto.png',
+        dirImage: '',
         status: '1',
     });
 
@@ -243,6 +243,14 @@ function ModalEditService({ serviceId, onClose, onUpdate }) {
                                 type="number"
                                 required
                             />
+                            <Box_Text_Value
+                                Label="Imagen del Servicio (URL)"
+                                V_Text={serviceData.dirImage}
+                                onChange={handleChange}
+                                name="dirImage"
+                                required
+                            />
+
                             <div className="form-group">
                                 <label>Estado:</label>
                                 <select

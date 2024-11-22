@@ -11,8 +11,8 @@ function App() {
   return (
     <Router>
       <Routes>
-      <Route path="/empleado/:id/*" element={<V_Employee />} />
-      <Route path="/cliente/:id/*" element={<V_Client />} />
+      <Route path="/empleado/*" element={<V_Employee />} />
+      <Route path="/cliente/*" element={<V_Client />} />
         <Route path="/login" element={<V_Login />} />
         <Route path="/register" element={<V_Register />} />
       </Routes>

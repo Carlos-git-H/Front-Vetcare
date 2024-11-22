@@ -3,13 +3,13 @@ import "./Buttons.css"
 
 function Btn_Info({nameId, showContent = 'icon'}) {
     return (
-    <button id={nameId} type="button" className={`btn btn-info ${showContent}`}>
+    <button id={nameId} type="button" className={`btn btn-warning ${showContent}`}>
         {showContent === 'icon' && (
             <span className="material-symbols-outlined">Visibility</span>
         )}
         {showContent === 'text+icon' && (
         <>
-            <span>Ver más</span>
+            <span>Informacion</span>
             <span className="material-symbols-outlined">Visibility</span>
         </>
         )}
