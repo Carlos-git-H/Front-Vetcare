@@ -2,8 +2,7 @@ import React from 'react'
 import "../../Layouts/Layouts.css"
 import C_Title from '../../Components/CS_General/C_Title/C_Title'
 import C_Statisclas from '../../Components/CS_General/C_Statiscals/C_Statisclas'
-import O_editClient from '../Options_L/O_Clients/O_editClient'
-import O_newClient from '../Options_L/O_Clients/O_newClient'
+import PaymentButton from '../../Components/CS_General/Buttons/PaymentButton'
 function L_Agenda_Cl() {
 
 
@@ -11,12 +10,8 @@ function L_Agenda_Cl() {
     <section className='Layout'>
         <div className='Content_Layout'>
             <C_Title nameTitle={"Agenda"}/>
-            <C_Statisclas />
-
-            <p>comprar manzana</p>
-            <button onClick={"MP()"}></button>
-            <div id='wallet_container'></div>
-
+            <C_Statisclas />            
+            <PaymentButton />
 
         </div>
     </section>

@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import './App.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-
 import V_Client from './Views/V_Client'
 import V_Employee from './Views/V_Employee'
 import V_Login from './Views/V_Login/V_Login'
 import V_Register from './Views/V_Register/V_Register'
+import { initMercadoPago } from '@mercadopago/sdk-react'
+;
+// Inicializa MercadoPago con tu clave pública
+initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY); 
 
 function App() {
   return (
