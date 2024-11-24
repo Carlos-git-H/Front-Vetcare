@@ -3,22 +3,23 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { fetchQuotesForCalendar } from '../../Services/quotesService.js';
-import ModalViewQuoteCalendar from '../../Layouts/LS_Employees/ModalQuote/ModalViewQuoteCalendar';
-function C_Calendar() {
+import { fetchQuotesForClientCalendar } from '../../Services/quotesService';
+import ModalViewQuoteCalendarCl from '../../Layouts/LS_Clients/ModalQuote/ModelViewQuoteCalendarCl';
+
+function C_Calendar_Cl({ clientId }) {
     const [events, setEvents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedQuoteId, setSelectedQuoteId] = useState(null);
 
-    // Cargar eventos del calendario
+    // Cargar eventos del cliente
     useEffect(() => {
         const loadEvents = async () => {
             try {
-                const data = await fetchQuotesForCalendar(); // Llama al método para obtener las citas activas
+                const data = await fetchQuotesForClientCalendar(clientId);
                 const formattedEvents = data.map(quote => ({
                     id: quote.idQuote,
                     title: `${quote.serviceName} - ${quote.petName}`,
-                    start: `${quote.date}T${quote.hour}`, // Combina fecha y hora
+                    start: `${quote.date}T${quote.hour}`,
                 }));
                 setEvents(formattedEvents);
             } catch (error) {
@@ -27,15 +28,13 @@ function C_Calendar() {
         };
 
         loadEvents();
-    }, []);
+    }, [clientId]);
 
-    // Manejador de clic en un evento
     const handleEventClick = (info) => {
-        setSelectedQuoteId(info.event.id); // Configura el ID de la cita seleccionada
-        setIsModalOpen(true); // Abre el modal
+        setSelectedQuoteId(info.event.id);
+        setIsModalOpen(true);
     };
 
-    // Cerrar el modal
     const closeModal = () => {
         setIsModalOpen(false);
         setSelectedQuoteId(null);
@@ -46,19 +45,15 @@ function C_Calendar() {
             <FullCalendar
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                 initialView="dayGridMonth"
-                events={events}
-                eventClick={handleEventClick} // Manejador de clic en evento
+                events={events} // Usa el estado correcto
+                eventClick={handleEventClick}
             />
 
-            {/* Modal para mostrar los detalles de la cita */}
             {isModalOpen && (
-                <ModalViewQuoteCalendar
-                    idQuote={selectedQuoteId} // Pasa el ID de la cita al modal
-                    onClose={closeModal} // Función para cerrar el modal
-                />
+                <ModalViewQuoteCalendarCl idQuote={selectedQuoteId} onClose={closeModal} />
             )}
         </div>
     );
 }
 
-export default C_Calendar;
+export default C_Calendar_Cl;

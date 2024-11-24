@@ -1,9 +1,13 @@
 import React from 'react'
 import "./Buttons.css"
 
-function Btn_Info({nameId, showContent = 'icon'}) {
+function Btn_Info({nameId, showContent = 'icon', onClick}) {
     return (
-    <button id={nameId} type="button" className={`btn btn-warning ${showContent}`}>
+    <button id={nameId} 
+    type="button" 
+    className={`btn btn-secondary ${showContent}`}
+    onClick={onClick}
+    >
         {showContent === 'icon' && (
             <span className="material-symbols-outlined">Visibility</span>
         )}

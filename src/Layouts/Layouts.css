@@ -31,3 +31,14 @@
     max-width: 90%;
     text-align: center;
 }
+
+
+
+.contenido-agenda{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+.full-calendar{
+    width: 800px;
+}

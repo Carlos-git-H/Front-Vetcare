@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Wallet } from '@mercadopago/sdk-react';
 import { createPreference } from '../../../Services/mercadoPagoService';
 
-const PaymentButton = () => {
+const PaymentButton = ({Title, Unit_price}) => {
     const [preferenceId, setPreferenceId] = useState(null);
 
     useEffect(() => {
         const fetchPreference = async () => {
             const userBuyer = {
-                title: 'Producto de ejemplo',
+                title: Title,
                 quantity: 1,
-                unit_price: 100, // Precio en soles
+                unit_price:Unit_price,
             };
 
             try {
@@ -26,7 +26,6 @@ const PaymentButton = () => {
 
     return (
         <div>
-            <h2>Pagar con Mercado Pago</h2>
             {preferenceId ? (
                 <Wallet
                     initialization={{

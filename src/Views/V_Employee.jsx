@@ -9,6 +9,7 @@ import L_Citas_Em from '../Layouts/LS_Employees/L_Citas_Em';
 import L_Reports_Em from '../Layouts/LS_Employees/L_Reports_Em';
 import L_Clients_Em from '../Layouts/LS_Employees/L_Clients_Em';
 import L_Employees_Em from '../Layouts/LS_Employees/L_Employees_Em';
+import "./Vistas.css"
 
 function V_Employee() {
   const [employeeData, setEmployeeData] = useState(null);
@@ -54,25 +55,32 @@ function V_Employee() {
   }
 
   return (
-    <div>
-      {/* Mostrar el componente C_Aside_Em solo si los datos del empleado están disponibles */}
-      {employeeData && <C_Aside_Em nameEmpleado={employeeData.firstName} />}
-      <div>
-        <Routes>
-          <Route>
-            <Route path="agenda/*" element={<L_Agenda_Em />}></Route>
-            <Route path="perfil/*" element={<L_Profile_Em />}></Route>
-            <Route path="mascotas/*" element={<L_Pets_Em />}></Route>
-            <Route path="servicios/*" element={<L_Services_Em />}></Route>
-            <Route path="citas/*" element={<L_Citas_Em />}></Route>
-            <Route path="empleados/*" element={<L_Employees_Em />}></Route>
-            <Route path="clientes/*" element={<L_Clients_Em />}></Route>
-            <Route path="reportes/*" element={<L_Reports_Em />}></Route>
-            
-            <Route path="/" element={<Navigate to="agenda" />} />
-            
-          </Route>
-        </Routes>
+    <div className='layout-container'>
+
+      <div className='layout-aside'>
+      
+        {/* Mostrar el componente C_Aside_Em solo si los datos del empleado están disponibles */}
+        {employeeData && <C_Aside_Em nameEmpleado={employeeData.firstName} />}
+
+      </div>
+
+      
+      <div className='layout-content'>
+          <Routes>
+            <Route>
+              <Route path="agenda/*" element={<L_Agenda_Em />}></Route>
+              <Route path="perfil/*" element={<L_Profile_Em />}></Route>
+              <Route path="mascotas/*" element={<L_Pets_Em />}></Route>
+              <Route path="servicios/*" element={<L_Services_Em />}></Route>
+              <Route path="citas/*" element={<L_Citas_Em />}></Route>
+              <Route path="empleados/*" element={<L_Employees_Em />}></Route>
+              <Route path="clientes/*" element={<L_Clients_Em />}></Route>
+              <Route path="reportes/*" element={<L_Reports_Em />}></Route>
+              
+              <Route path="/" element={<Navigate to="agenda" />} />
+              
+            </Route>
+          </Routes>
       </div>
     </div>
   );
