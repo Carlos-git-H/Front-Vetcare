@@ -5,6 +5,7 @@ import Box_Text_Empty from '../CS_General/Form Box/Box_Text/Box_Text_Empty';
 import SelectImput from '../CS_General/Form Box/SelectImput/SelectImput';
 import DateTimePicker from "../CS_General/Form Box/DateTimePicker/DateTimePicker";
 import Btn_Report from '../CS_General/Buttons/Btn_Report';
+import { fetchQuotes, generateReport } from '../../Services/reportService.js'; // Importar servicios
 
 function C_TablaReportes() {
     const [quotes, setQuotes] = useState([]); // Lista de citas
@@ -35,43 +36,18 @@ function C_TablaReportes() {
     ];
 
     useEffect(() => {
-        fetchQuotes(currentPage);
-    }, [currentPage]);
+        loadQuotes(currentPage);
+    }, [currentPage, filters]); // Actualiza cuando cambian los filtros
 
-    const fetchQuotes = (page, customFilters = {}) => {
-        const { startDate, endDate, status, statusPag, metPag, species, serviceName } = {
-            ...filters,
-            ...customFilters,
-        };
-
-        const queryParams = new URLSearchParams({
-            page,
-            size: 9,
-            ...(startDate && { startDate }),
-            ...(endDate && { endDate }),
-            ...(status && { status }),
-            ...(metPag && { metPag }),
-            ...(species && { species }),
-            ...(serviceName && { serviceName }),
-            ...(statusPag && { statusPag }),
-        }).toString();
-
-        fetch(`http://localhost:8080/api/report/appointments?${queryParams}`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error al obtener las citas");
-                }
-                return response.json();
-            })
-            .then((data) => {
-                setQuotes(data.content || []);
-                setTotalPages(data.totalPages || 0);
-                setError(''); // Limpia cualquier error previo
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                setError('Ocurrió un error al obtener las citas.'); // Mensaje de error
-            });
+    const loadQuotes = async (page) => {
+        try {
+            const data = await fetchQuotes(filters, page, 9); // Llama al servicio
+            setQuotes(data.content || []);
+            setTotalPages(data.totalPages || 0);
+            setError('');
+        } catch (error) {
+            setError(error.message);
+        }
     };
 
     const handleFilterChange = (e) => {
@@ -82,15 +58,14 @@ function C_TablaReportes() {
         }));
         setError(''); // Limpia el mensaje de error al cambiar los filtros
     };
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0'); // Día con dos dígitos
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Mes con dos dígitos (base 0)
-        const year = date.getFullYear(); // Año completo
-        return `${day}-${month}-${year}`; // Formato dd-mm-yyyy
+
+    const handleGenerateReport = async () => {
+        try {
+            await generateReport(filters); // Llama al servicio para generar el reporte
+        } catch (error) {
+            setError(error.message);
+        }
     };
-    
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -101,13 +76,13 @@ function C_TablaReportes() {
         }
 
         setCurrentPage(0);
-        fetchQuotes(0, filters);
+        loadQuotes(0); // Carga los datos con los filtros actuales
     };
 
     return (
         <div>
             {/* Formulario de búsqueda */}
-            <form onSubmit={handleSearch} >
+            <form onSubmit={handleSearch}>
                 <div className="row">
                     <div className="col">
                         <DateTimePicker
@@ -146,7 +121,7 @@ function C_TablaReportes() {
                         />
                     </div>
                 </div>
-                <div className='row'>
+                <div className="row">
                     <div className="col">
                         <SelectImput
                             label="Estado de Pago"
@@ -181,8 +156,7 @@ function C_TablaReportes() {
                             onClick={handleSearch}
                         />
                     </div>
-                </div> 
-                
+                </div>
             </form>
 
             {/* Tabla de citas */}
@@ -206,14 +180,10 @@ function C_TablaReportes() {
                                 <td>{quote.idQuote}</td>
                                 <td>{quote.pet.name}</td>
                                 <td>{quote.pet.race.especie.name}</td>
-                                <td>{formatDate(quote.date)}</td>
+                                <td>{quote.date}</td>
                                 <td>{quote.service.name}</td>
                                 <td>{quote.metPag.name}</td>
-                                <td>
-                                    {quote.statusPag === '1'
-                                        ? 'Pendiente'
-                                        : 'Pagado'}
-                                </td>
+                                <td>{quote.statusPag === '1' ? 'Pendiente' : 'Pagado'}</td>
                                 <td>
                                     {quote.status === '1'
                                         ? 'En espera'
@@ -227,7 +197,7 @@ function C_TablaReportes() {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="9" className="text-center">
+                            <td colSpan="8" className="text-center">
                                 No se encontraron citas.
                             </td>
                         </tr>
@@ -242,8 +212,7 @@ function C_TablaReportes() {
                     totalPages={totalPages}
                     onPageChange={(page) => setCurrentPage(page)}
                 />
-
-                <Btn_Report nameId={""} showContent='text+icon' />
+                <Btn_Report nameId={"report"} showContent="text+icon" onClick={handleGenerateReport} />
             </div>
         </div>
     );

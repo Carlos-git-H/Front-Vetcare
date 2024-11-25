@@ -1,7 +1,7 @@
 import React from 'react'
 import "./Buttons.css"
 
-function Btn_Report({nameId, showContent = 'icon'}) {
+function Btn_Report({nameId, showContent = 'icon',onClick}) {
 
     return (
         <div className="Btn" style={{ display: 'flex', justifyContent: 'center' }}>
@@ -10,6 +10,7 @@ function Btn_Report({nameId, showContent = 'icon'}) {
                 name={nameId}
                 type="button"
                 className={`btn btn-success ${showContent}`}
+                onClick={onClick}
             >
                 {showContent === 'icon' && (
                     <span
