@@ -30,7 +30,6 @@ export const updateQuote = async (quoteId, updatedQuote) => {
   }
 };
 
-
 // Cancelar cita
 export const cancelQuote = async (quoteId) => {
   try {

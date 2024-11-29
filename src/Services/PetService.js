@@ -114,3 +114,17 @@ export const getPetNameById = async (petId) => {
       throw error.response?.data || 'Error al buscar la mascota.';
   }
 };
+
+// Buscar mascotas activas de un cliente específico
+export const fetchPetsByClientId = async (clientId) => {
+  try {
+    const response = await axios.get(`${API_URL}/client`, {
+      params: { clientId },
+    });
+    return response.data; // Devuelve los datos de la API
+  } catch (error) {
+    console.error("Error al buscar mascotas del cliente:", error.response || error.message);
+    throw error.response?.data || "Error al buscar mascotas del cliente.";
+  }
+};
+

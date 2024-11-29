@@ -4,7 +4,7 @@ import Btn_Search from '../../Components/CS_General/Buttons/Btn_Search';
 import Box_Text_Empty from '../../Components/CS_General/Form Box/Box_Text/Box_Text_Empty';
 import C_Title from '../../Components/CS_General/C_Title/C_Title';
 import Pagination from '../../Components/CS_General/Pagination';
-import ModalNewQuote_Cl from '../../Components/CS_Clients/ModalNewQuote_Cl';
+import ModalNewQuote_Cl from '../LS_Clients/ModalQuote/ModalNewQuote_Cl';
 import { fetchServices } from '../../Services/serviceService'; 
 
 function L_Services_Cl() {

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import "../../CS_Employees/C_CardData_Em/C_CardData.css";
+import { getClientById } from '../../../Services/clientService'; // Ajusta la ruta según tu estructura
 
 function C_CardData_Client() {
     const DirImgs = "/Img/"; 
-    const [dataProfile, setDataProfile] = useState(null);
+    const [dataProfile, setDataProfile] = useState(null); // Estado para almacenar los datos del perfil
+    const [error, setError] = useState(null); // Estado para manejar errores
 
     useEffect(() => {
         const userId = localStorage.getItem('userId'); // Obtiene el ID del usuario del localStorage
@@ -12,25 +13,27 @@ function C_CardData_Client() {
         // Validar credenciales
         if (!userId || userType !== 'cliente') {
             console.error('Credenciales no válidas o tipo de usuario incorrecto');
+            setError('Credenciales no válidas o tipo de usuario incorrecto');
             return;
         }
 
-        // Llamada al backend para obtener los datos del perfil del cliente
+        // Llamada al servicio para obtener los datos del cliente
         const fetchProfileData = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/clients/${userId}`);
-                if (!response.ok) {
-                    throw new Error('Error al obtener los datos del cliente');
-                }
-                const data = await response.json();
+                const data = await getClientById(userId);
                 setDataProfile(data); // Asigna los datos obtenidos al estado
             } catch (error) {
                 console.error('Error al obtener los datos del perfil:', error);
+                setError(error || 'Error al obtener los datos del perfil.');
             }
         };
 
         fetchProfileData(); // Ejecuta la función
     }, []); // Solo se ejecuta una vez al montar el componente
+
+    if (error) {
+        return <p className="text-danger">{error}</p>; // Muestra el error si ocurre
+    }
 
     if (!dataProfile) {
         return <p>Cargando datos del perfil...</p>; // Muestra un mensaje mientras se cargan los datos
