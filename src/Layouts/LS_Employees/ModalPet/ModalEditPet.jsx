@@ -2,14 +2,11 @@ import React, { useEffect, useState } from 'react';
 import "../../../Layouts/Layouts.css";
 import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
 import HiddenInput from '../../../Components/CS_General/Form Box/Box_Text/HiddenInput';
+import { getPetById, updatePet } from "../../../Services/PetService";
+import { searchClientByDni } from "../../../Services/clientService";
+import { searchRaceByName } from "../../../Services/raceService";
 
 function ModalEditPet({ petId, onClose, onUpdate }) {
-
-    
-    const userType = localStorage.getItem('userType');
-        
-
-    
     const [petData, setPetData] = useState({
         name: '',
         raceName: '',
@@ -24,25 +21,24 @@ function ModalEditPet({ petId, onClose, onUpdate }) {
         status: '1',
     });
 
-    const [clientData, setClientData] = useState(null); // Datos del cliente encontrado
-    const [clientError, setClientError] = useState(null); // Error al buscar cliente
-    const [raceData, setRaceData] = useState(null); // Datos de la raza encontrada
-    const [raceError, setRaceError] = useState(null); // Error al buscar raza
+    const [clientData, setClientData] = useState(null);
+    const [clientError, setClientError] = useState(null);
+    const [raceData, setRaceData] = useState(null);
+    const [raceError, setRaceError] = useState(null);
 
     useEffect(() => {
         if (petId) {
-            fetch(`http://localhost:8080/api/pets/${petId}`)
-                .then(response => response.json())
-                .then(data => {
+            getPetById(petId)
+                .then((data) => {
                     setPetData({
                         name: data.name,
                         raceName: data.race.name,
                         raceId: data.race.idRace,
                         sex: data.sex,
                         weight: data.weight,
-                        dateNac: data.dateNac.split('T')[0], // Formatear la fecha para el input
+                        dateNac: data.dateNac.split('T')[0],
                         comments: data.comments,
-                        dniClient: '', // Se busca por DNI, pero no se incluye en los datos de la mascota
+                        dniClient: '',
                         clientId: data.client.idClient,
                         dirImage: data.dirImage,
                         status: data.status,
@@ -52,7 +48,7 @@ function ModalEditPet({ petId, onClose, onUpdate }) {
                         lastName: data.client.firstLastName,
                     });
                 })
-                .catch(error => console.error("Error al obtener los datos de la mascota:", error));
+                .catch((error) => console.error('Error al obtener datos de la mascota:', error));
         }
     }, [petId]);
 
@@ -64,113 +60,77 @@ function ModalEditPet({ petId, onClose, onUpdate }) {
         }));
     };
 
-    // Busca cliente por DNI
-    const handleFindClient = () => {
-        if (!petData.dniClient) {
-            setClientError("Por favor, ingrese un DNI válido.");
+    const handleFindClient = async () => {
+        if (!/^\d{8}$/.test(petData.dniClient)) {
+            setClientError('El DNI debe tener exactamente 8 dígitos.');
             return;
         }
-
-        fetch(`http://localhost:8080/api/clients/search?dni=${petData.dniClient}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al buscar el cliente.");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.content && data.content.length > 0) {
-                    const client = data.content[0];
-                    setPetData((prevState) => ({
-                        ...prevState,
-                        clientId: client.idClient,
-                    }));
-                    setClientData({
-                        name: client.firstName,
-                        lastName: client.firstLastName,
-                    });
-                    setClientError(null);
-                } else {
-                    setClientError("No se encontró un cliente con el DNI proporcionado.");
-                    setClientData(null);
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                setClientError("Ocurrió un error al buscar el cliente.");
+        try {
+            const data = await searchClientByDni(petData.dniClient);
+            if (data.length > 0) {
+                const client = data[0];
+                setPetData((prevState) => ({
+                    ...prevState,
+                    clientId: client.idClient,
+                }));
+                setClientData({ name: client.firstName, lastName: client.firstLastName });
+                setClientError(null);
+            } else {
+                setClientError('No se encontró un cliente con el DNI proporcionado.');
                 setClientData(null);
-            });
+            }
+        } catch (error) {
+            setClientError('Error al buscar cliente.');
+            setClientData(null);
+        }
     };
 
-    // Busca raza por nombre
-    const handleFindRace = () => {
-        if (!petData.raceName) {
-            setRaceError("Por favor, ingrese un nombre de raza válido.");
+    const handleFindRace = async () => {
+        if (!/^[a-zA-Z]+$/.test(petData.raceName)) {
+            setRaceError('El nombre de la raza solo puede contener letras.');
             return;
         }
-
-        fetch(`http://localhost:8080/api/races/search?name=${petData.raceName}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al buscar la raza.");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.content && data.content.length > 0) {
-                    const race = data.content[0];
-                    setPetData((prevState) => ({
-                        ...prevState,
-                        raceId: race.idRace,
-                    }));
-                    setRaceData(race);
-                    setRaceError(null);
-                } else {
-                    setRaceError("No se encontró una raza con el nombre proporcionado.");
-                    setRaceData(null);
-                }
-            })
-            .catch(error => {
-                console.error("Error en la búsqueda de raza:", error);
-                setRaceError("Ocurrió un error al buscar la raza.");
+        try {
+            const data = await searchRaceByName(petData.raceName);
+            if (data.length > 0) {
+                const race = data[0];
+                setPetData((prevState) => ({
+                    ...prevState,
+                    raceId: race.idRace,
+                }));
+                setRaceData(race);
+                setRaceError(null);
+            } else {
+                setRaceError('No se encontró una raza con el nombre proporcionado.');
                 setRaceData(null);
-            });
+            }
+        } catch (error) {
+            setRaceError('Error al buscar raza.');
+            setRaceData(null);
+        }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!petData.clientId || !petData.raceId) {
-            alert("Por favor, busque y seleccione un cliente y una raza antes de guardar los cambios.");
+            alert('Por favor, busque y seleccione un cliente y una raza antes de guardar.');
             return;
         }
 
-        fetch(`http://localhost:8080/api/pets/update/${petId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        try {
+            await updatePet(petId, {
                 ...petData,
                 race: { idRace: petData.raceId },
                 client: { idClient: petData.clientId },
-            }),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al actualizar la mascota.");
-                }
-                return response.text();
-            })
-            .then(() => {
-                alert("Mascota actualizada exitosamente.");
-                onUpdate();
-                onClose();
-            })
-            .catch(error => {
-                console.error("Error al actualizar la mascota:", error);
-                alert("Error al actualizar la mascota.");
             });
+            alert('Mascota actualizada exitosamente.');
+            onUpdate();
+            onClose();
+        } catch (error) {
+            console.error('Error al actualizar la mascota:', error);
+            alert('Error al actualizar la mascota.');
+        }
     };
 
     return (
@@ -179,12 +139,7 @@ function ModalEditPet({ petId, onClose, onUpdate }) {
                 <div className="modal-content">
                     <div className="modal-header">
                         <h5 className="modal-title">Editar Mascota</h5>
-                        <button
-                            type="button"
-                            className="btn-close"
-                            aria-label="Close"
-                            onClick={onClose}
-                        ></button>
+                        <button type="button" className="btn-close" onClick={onClose}></button>
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
@@ -206,23 +161,31 @@ function ModalEditPet({ petId, onClose, onUpdate }) {
                                 Buscar Raza
                             </button>
                             {raceError && <p className="text-danger">{raceError}</p>}
-                            {raceData && (
-                                <p className="text-success">
-                                    Raza encontrada: {raceData.name}
-                                </p>
-                            )}
-                            <Box_Text_Value
-                                Label="Sexo"
-                                V_Text={petData.sex}
-                                onChange={handleChange}
-                                name="sex"
-                                required
-                            />
+                            {raceData && <p className="text-success">Raza encontrada: {raceData.name}</p>}
+
+                            <div className="form-group">
+                                <label>Sexo:</label>
+                                <select
+                                    name="sex"
+                                    value={petData.sex}
+                                    onChange={handleChange}
+                                    className="input-box"
+                                    required
+                                >
+                                    <option value="">Seleccione sexo</option>
+                                    <option value="M">Macho</option>
+                                    <option value="H">Hembra</option>
+                                </select>
+                            </div>
+
                             <Box_Text_Value
                                 Label="Peso"
                                 V_Text={petData.weight}
                                 onChange={handleChange}
                                 name="weight"
+                                type="number"
+                                min="0"
+                                step="0.1"
                                 required
                             />
                             <Box_Text_Value
@@ -239,37 +202,31 @@ function ModalEditPet({ petId, onClose, onUpdate }) {
                                 onChange={handleChange}
                                 name="comments"
                             />
-                            {userType === 'empleado' && (
-                                <>
-                                    <Box_Text_Value
-                                        Label="DNI del Cliente"
-                                        V_Text={petData.dniClient}
-                                        onChange={handleChange}
-                                        name="dniClient"
-                                        required
-                                    />
-                                    <button type="button" className="btn btn-secondary" onClick={handleFindClient}>
-                                        Buscar Cliente
-                                    </button>
-                                    {clientError && <p className="text-danger">{clientError}</p>}
-                                    {clientData && (
-                                        <p className="text-success">
-                                            Cliente: {clientData.name} {clientData.lastName}
-                                        </p>
-                                    )}
-                                </>
+                            <Box_Text_Value
+                                Label="DNI del Cliente"
+                                V_Text={petData.dniClient}
+                                onChange={handleChange}
+                                name="dniClient"
+                                required
+                            />
+                            <button type="button" className="btn btn-secondary" onClick={handleFindClient}>
+                                Buscar Cliente
+                            </button>
+                            {clientError && <p className="text-danger">{clientError}</p>}
+                            {clientData && (
+                                <p className="text-success">
+                                    Cliente: {clientData.name} {clientData.lastName}
+                                </p>
                             )}
 
                             <HiddenInput name="clientId" value={petData.clientId} />
-                   
-                    
                             <div className="form-group">
                                 <label>Estado:</label>
                                 <select
                                     name="status"
                                     value={petData.status}
                                     onChange={handleChange}
-                                    className="input-box"
+                                    required
                                 >
                                     <option value="1">Activo</option>
                                     <option value="0">Muerto</option>
@@ -277,11 +234,7 @@ function ModalEditPet({ petId, onClose, onUpdate }) {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={onClose}
-                            >
+                            <button type="button" className="btn btn-secondary" onClick={onClose}>
                                 Cancelar
                             </button>
                             <button type="submit" className="btn btn-primary">

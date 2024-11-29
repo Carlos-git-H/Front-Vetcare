@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import "../../../Layouts/Layouts.css";
 import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
+import Box_Text_Bloq from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Bloq';
 import HiddenInput from '../../../Components/CS_General/Form Box/Box_Text/HiddenInput';
 import SelectInput from '../../../Components/CS_General/Form Box/SelectImput/SelectImput';
+import { createEmployee, isCellphoneInUse, isCmvpInUse } from '../../../Services/employeeService';
+import { isEmailInUse } from '../../../Services/userService';
+import { getActiveRoles } from '../../../Services/roleService';
+import { isDniInUse } from '../../../Services/employeeService';
+import apiReniec from '../../../Services/reniecService';
 
 function ModalNewEmployee({ onClose, onUpdate }) {
     const [employeeData, setEmployeeData] = useState({
@@ -18,23 +24,16 @@ function ModalNewEmployee({ onClose, onUpdate }) {
         status: "1",
         email: "",
         password: "",
-        rolId: "", // Inicializa vacío para detectar el cambio
+        rolId: "",
     });
 
     const [roles, setRoles] = useState([]);
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
-        // Fetch para obtener roles activos
-        fetch('http://localhost:8080/api/roles/active')
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error al obtener los roles.");
-                }
-                return response.json();
-            })
+        getActiveRoles()
             .then((data) => {
-                setRoles(data || []);
-                // Establecer el primer rol como predeterminado si no se selecciona otro
+                setRoles(data);
                 if (data.length > 0) {
                     setEmployeeData((prevData) => ({
                         ...prevData,
@@ -50,15 +49,105 @@ function ModalNewEmployee({ onClose, onUpdate }) {
         setEmployeeData((prevData) => ({ ...prevData, [name]: value }));
     };
 
-    const handleCreateEmployee = () => {
-        // Validar datos requeridos
-        if (
-            !employeeData.dni ||
-            !employeeData.email ||
-            !employeeData.password ||
-            !employeeData.rolId
-        ) {
-            alert("Por favor, completa todos los campos requeridos.");
+    const validateFields = async () => {
+        const newErrors = {};
+
+        // Validación de campos obligatorios
+        if (!employeeData.dni.trim()) newErrors.dni = "El DNI no puede estar vacío.";
+        if (!employeeData.firstName.trim()) newErrors.firstName = "El primer nombre no puede estar vacío.";
+        if (!employeeData.firstLastName.trim()) newErrors.firstLastName = "El primer apellido no puede estar vacío.";
+        if (!employeeData.secondLastName.trim()) newErrors.secondLastName = "El segundo apellido no puede estar vacío.";
+        if (!employeeData.address.trim()) newErrors.address = "La dirección no puede estar vacía.";
+        if (!employeeData.cellphone.trim()) newErrors.cellphone = "El número de celular no puede estar vacío.";
+        if (!employeeData.email.trim()) newErrors.email = "El correo electrónico no puede estar vacío.";
+        if (!employeeData.password.trim()) newErrors.password = "La contraseña no puede estar vacía.";
+
+        // Validación de DNI
+        if (!/^\d{8}$/.test(employeeData.dni)) {
+            newErrors.dni = "El DNI debe tener exactamente 8 dígitos numéricos.";
+        }
+
+        // Validación de celular
+        if (!/^9\d{8}$/.test(employeeData.cellphone)) {
+            newErrors.cellphone = "El número de celular debe comenzar con 9 y tener 9 dígitos.";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSearchDni = async () => {
+        if (!/^\d{8}$/.test(employeeData.dni)) {
+            setErrors((prevErrors) => ({ ...prevErrors, dni: "El DNI debe tener exactamente 8 dígitos numéricos." }));
+            return;
+        }
+
+        try {
+            const dniInUse = await isDniInUse(employeeData.dni);
+            if (dniInUse) {
+                setErrors((prevErrors) => ({
+                    ...prevErrors,
+                    dni: "El DNI ya está registrado como empleado.",
+                }));
+                setEmployeeData((prevData) => ({
+                    ...prevData,
+                    firstName: "",
+                    preName: "",
+                    firstLastName: "",
+                    secondLastName: "",
+                }));
+                return;
+            }
+
+            const response = await apiReniec.get(`/${employeeData.dni}`);
+            setEmployeeData((prevData) => ({
+                ...prevData,
+                firstName: response.data.primerNombre,
+                preName: response.data.preNombres,
+                firstLastName: response.data.apellidoPaterno,
+                secondLastName: response.data.apellidoMaterno,
+            }));
+            setErrors({});
+        } catch (error) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                dni: "No se encontraron datos para el DNI ingresado.",
+            }));
+        }
+    };
+
+    const handleCreateEmployee = async () => {
+        if (!(await validateFields())) return;
+
+        try {
+            const emailInUse = await isEmailInUse(employeeData.email);
+            if (emailInUse) {
+                setErrors((prevErrors) => ({
+                    ...prevErrors,
+                    email: "El correo electrónico ya está registrado.",
+                }));
+                return;
+            }
+
+            const cellphoneInUse = await isCellphoneInUse(employeeData.cellphone);
+            if (cellphoneInUse) {
+                setErrors((prevErrors) => ({
+                    ...prevErrors,
+                    cellphone: "El número de celular ya está registrado.",
+                }));
+                return;
+            }
+
+            const cmvpInUse = await isCmvpInUse(employeeData.cmvp);
+            if (cmvpInUse) {
+                setErrors((prevErrors) => ({
+                    ...prevErrors,
+                    cmvp: "El CMVP ya está registrado.",
+                }));
+                return;
+            }
+        } catch (error) {
+            alert("Error al verificar datos únicos. Intenta nuevamente más tarde.");
             return;
         }
 
@@ -83,28 +172,14 @@ function ModalNewEmployee({ onClose, onUpdate }) {
             },
         };
 
-        fetch('http://localhost:8080/api/employees/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(newEmployeeData),
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error al crear el empleado.");
-                }
-                return response.json();
-            })
-            .then(() => {
-                alert("Empleado creado exitosamente.");
-                onUpdate();
-                onClose();
-            })
-            .catch((error) => {
-                console.error("Error al crear el empleado:", error);
-                alert("Error al crear el empleado.");
-            });
+        try {
+            await createEmployee(newEmployeeData);
+            alert("Empleado creado exitosamente.");
+            onUpdate();
+            onClose();
+        } catch (error) {
+            alert("Error al crear el empleado. Intenta nuevamente.");
+        }
     };
 
     return (
@@ -127,55 +202,57 @@ function ModalNewEmployee({ onClose, onUpdate }) {
                                 V_Text={employeeData.dni}
                                 onChange={handleChange}
                                 name="dni"
-                                required
                             />
+                            <button
+                                type="button"
+                                className="btn btn-primary ms-2"
+                                onClick={handleSearchDni}
+                            >
+                                Buscar
+                            </button>
+                            {errors.dni && <small className="text-danger">{errors.dni}</small>}
+
+                            <Box_Text_Bloq
+                                Label="Primer Nombre"
+                                V_Text={employeeData.firstName}
+                            />
+                            <Box_Text_Bloq
+                                Label="Segundo Nombre"
+                                V_Text={employeeData.preName}
+                            />
+                            <Box_Text_Bloq
+                                Label="Primer Apellido"
+                                V_Text={employeeData.firstLastName}
+                            />
+                            <Box_Text_Bloq
+                                Label="Segundo Apellido"
+                                V_Text={employeeData.secondLastName}
+                            />
+
+                            <Box_Text_Value
+                                Label="Dirección"
+                                V_Text={employeeData.address}
+                                onChange={handleChange}
+                                name="address"
+                            />
+                            {errors.address && <small className="text-danger">{errors.address}</small>}
+
+                            <Box_Text_Value
+                                Label="Teléfono"
+                                V_Text={employeeData.cellphone}
+                                onChange={handleChange}
+                                name="cellphone"
+                            />
+                            {errors.cellphone && <small className="text-danger">{errors.cellphone}</small>}
+
                             <Box_Text_Value
                                 Label="CMVP"
                                 V_Text={employeeData.cmvp}
                                 onChange={handleChange}
                                 name="cmvp"
                             />
-                            <Box_Text_Value
-                                Label="Primer Nombre"
-                                V_Text={employeeData.firstName}
-                                onChange={handleChange}
-                                name="firstName"
-                                required
-                            />
-                            <Box_Text_Value
-                                Label="Segundo Nombre"
-                                V_Text={employeeData.preName}
-                                onChange={handleChange}
-                                name="preName"
-                            />
-                            <Box_Text_Value
-                                Label="Primer Apellido"
-                                V_Text={employeeData.firstLastName}
-                                onChange={handleChange}
-                                name="firstLastName"
-                                required
-                            />
-                            <Box_Text_Value
-                                Label="Segundo Apellido"
-                                V_Text={employeeData.secondLastName}
-                                onChange={handleChange}
-                                name="secondLastName"
-                                required
-                            />
-                            <Box_Text_Value
-                                Label="Dirección"
-                                V_Text={employeeData.address}
-                                onChange={handleChange}
-                                name="address"
-                                required
-                            />
-                            <Box_Text_Value
-                                Label="Teléfono"
-                                V_Text={employeeData.cellphone}
-                                onChange={handleChange}
-                                name="cellphone"
-                                required
-                            />
+                            {errors.cmvp && <small className="text-danger">{errors.cmvp}</small>}
+
                             <SelectInput
                                 label="Rol"
                                 name="rolId"
@@ -185,23 +262,24 @@ function ModalNewEmployee({ onClose, onUpdate }) {
                                     value: rol.idRol,
                                     label: rol.name,
                                 }))}
-                                required
                             />
                             <Box_Text_Value
                                 Label="Correo Electrónico"
                                 V_Text={employeeData.email}
                                 onChange={handleChange}
                                 name="email"
-                                required
                             />
+                            {errors.email && <small className="text-danger">{errors.email}</small>}
+
                             <Box_Text_Value
                                 Label="Contraseña"
                                 V_Text={employeeData.password}
                                 onChange={handleChange}
                                 name="password"
                                 type="password"
-                                required
                             />
+                            {errors.password && <small className="text-danger">{errors.password}</small>}
+
                             <HiddenInput name="dirImage" value={employeeData.dirImage} />
                         </div>
                         <div className="modal-footer">

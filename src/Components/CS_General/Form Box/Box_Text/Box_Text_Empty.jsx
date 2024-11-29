@@ -7,10 +7,10 @@ function Box_Text_Empty({ id, Label, name, value, onChange }) {
             <label>{Label}:</label>
             <input
                 id={id}
-                name={name || id} // Usa `name` si está definido, de lo contrario `id`
+                name={name || id} 
                 type="text"
-                value={value || ""} // Valor controlado con cadena vacía predeterminada
-                onChange={onChange} // Maneja el cambio en el input
+                value={value || ""} 
+                onChange={onChange}
                 className="input-box"
             />
         </div>

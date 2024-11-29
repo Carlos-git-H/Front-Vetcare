@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getActiveQuotesByClientId, cancelQuote} from "../../Services/quotesService.js"
 import C_Title from '../../Components/CS_General/C_Title/C_Title';
 import Btn_New from '../../Components/CS_General/Buttons/Btn_New';
 import Btn_Info from '../../Components/CS_General/Buttons/Btn_Info';
@@ -9,8 +9,6 @@ import ModalNewQuote_Cl from '../../Components/CS_Clients/ModalNewQuote_Cl';
 import Pagination from '../../Components/CS_General/Pagination';
 import Btn_Edit from "../../Components/CS_General/Buttons/Btn_Edit";
 import ModalViewQuoteCalendarCl from './ModalQuote/ModelViewQuoteCalendarCl';
-
-const API_URL = 'http://localhost:8080/api/quotes';
 
 function L_Citas_Cl() {
     const [appointments, setAppointments] = useState([]);
@@ -27,7 +25,11 @@ function L_Citas_Cl() {
     }, [currentPage]);
 
     const fetchAppointments = async () => {
+
+
         const userId = localStorage.getItem('userId');
+
+
         if (!userId) {
             setError('No se encontró el ID del cliente.');
             setLoading(false);
@@ -36,14 +38,7 @@ function L_Citas_Cl() {
 
         try {
             setLoading(true);
-            const response = await axios.get(`${API_URL}/client`, {
-                params: {
-                    clientId: userId,
-                    page: currentPage,
-                    size: 5,
-                },
-            });
-            const data = response.data;
+            const data = await getActiveQuotesByClientId(userId, currentPage, 5);
             setAppointments(data.content || []);
             setTotalPages(data.totalPages || 0);
         } catch (err) {
@@ -58,9 +53,17 @@ function L_Citas_Cl() {
     };
 
     const handleViewInfo = (idQuote) => {
-        console.log(`Mostrando detalles para la cita con ID: ${idQuote}`);
         setSelectedQuoteId(idQuote);
         setIsInfoModalOpen(true);
+    };
+
+    const handleCancelQuote = async (idQuote) => {
+        try {
+            await cancelQuote(idQuote);
+            await fetchAppointments(); // Refrescar citas
+        } catch (error) {
+            setError('Error al cancelar la cita.');
+        }
     };
 
     const handleCloseModal = () => {
@@ -70,10 +73,6 @@ function L_Citas_Cl() {
     const handleCloseInfoModal = () => {
         setIsInfoModalOpen(false);
         setSelectedQuoteId(null);
-    };
-
-    const handleUpdateAppointments = async () => {
-        await fetchAppointments();
     };
 
     const handlePageChange = (page) => {
@@ -114,7 +113,7 @@ function L_Citas_Cl() {
                                 <div className='appointment-actions'>
                                     <Btn_Info showContent='icon' onClick={() => handleViewInfo(appointment.idQuote)} />
                                     <Btn_Edit />
-                                    <Btn_Delete />
+                                    <Btn_Delete nameId={"eliminarQuote"} showContent='icon' onDelete={() => handleCancelQuote(appointment.idQuote)} />
                                 </div>
                             </div>
                         ))
@@ -131,9 +130,9 @@ function L_Citas_Cl() {
 
             {isModalOpen && (
                 <ModalNewQuote_Cl
-                    clientId={localStorage.getItem('userId')}
+                    clientId={userId}
                     onClose={handleCloseModal}
-                    onUpdate={handleUpdateAppointments}
+                    onUpdate={fetchAppointments}
                 />
             )}
 

@@ -5,88 +5,78 @@ import Btn_Edit from '../CS_General/Buttons/Btn_Edit';
 import Btn_Delete from '../CS_General/Buttons/Btn_Delete';
 import Pagination from '../CS_General/Pagination';
 import Btn_New from '../CS_General/Buttons/Btn_New';
+import { fetchHistoryByPet, blockHistory } from '../../Services/historyClinService';
 
 function C_TablaHistClin({ petId }) {
     const [history, setHistory] = useState([]); // Datos del historial clínico
     const [currentPage, setCurrentPage] = useState(0); // Página actual
     const [totalPages, setTotalPages] = useState(1); // Total de páginas
-    const [isNewHistoryModalOpen, setIsNewHistoryModalOpen] = useState(false); // Estado para abrir modal de nuevo historial
-    const [isEditHistoryModalOpen, setIsEditHistoryModalOpen] = useState(false); // Estado para abrir modal de editar historial
-    const [selectedHistoryId, setSelectedHistoryId] = useState(null); // Historial seleccionado para editar
+    const [isNewHistoryModalOpen, setIsNewHistoryModalOpen] = useState(false); // Modal de nuevo historial
+    const [isEditHistoryModalOpen, setIsEditHistoryModalOpen] = useState(false); // Modal de editar historial
+    const [selectedHistoryId, setSelectedHistoryId] = useState(null); // ID de historial seleccionado
 
-    // Función para convertir fechas al formato adecuado
+    // Convertir fechas al formato adecuado
     const parseDate = (dateString) => {
         if (!dateString) return 'Fecha no disponible';
-        const date = new Date(dateString); // Intenta crear un objeto Date
-        if (isNaN(date)) return 'Fecha inválida'; // Si no es válida, muestra un mensaje
-        return date.toLocaleDateString('es-ES'); // Devuelve la fecha en formato "día/mes/año"
+        const date = new Date(dateString);
+        if (isNaN(date)) return 'Fecha inválida';
+        return date.toLocaleDateString('es-ES');
     };
 
-    // Función para cargar los datos del historial clínico
+    // Cargar datos del historial clínico
     const fetchHistory = async (page = 0) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/pet-clinical-history/${petId}?page=${page}&size=6`);
-            if (!response.ok) throw new Error('Error al obtener el historial clínico');
-            const data = await response.json();
-            setHistory(data.content); // Datos de la página actual
-            setTotalPages(data.totalPages); // Total de páginas disponibles
+            const data = await fetchHistoryByPet(petId, page);
+            setHistory(data.content);
+            setTotalPages(data.totalPages);
         } catch (error) {
             console.error('Error al cargar el historial clínico:', error);
         }
     };
 
-    // Función para abrir el modal de nuevo historial
-    const openNewHistoryModal = () => {
-        setIsNewHistoryModalOpen(true);
-    };
+    // Abrir modal de nuevo historial
+    const openNewHistoryModal = () => setIsNewHistoryModalOpen(true);
 
-    // Función para cerrar el modal de nuevo historial
+    // Cerrar modal de nuevo historial
     const closeNewHistoryModal = () => {
         setIsNewHistoryModalOpen(false);
-        fetchHistory(currentPage); // Recargar los datos al cerrar el modal
+        fetchHistory(currentPage); // Recargar datos
     };
 
-    // Función para abrir el modal de editar historial
+    // Abrir modal de editar historial
     const openEditHistoryModal = (historyId) => {
-        setSelectedHistoryId(historyId); // Guardar ID del historial seleccionado
+        setSelectedHistoryId(historyId);
         setIsEditHistoryModalOpen(true);
     };
 
-    // Función para cerrar el modal de editar historial
+    // Cerrar modal de editar historial
     const closeEditHistoryModal = () => {
         setIsEditHistoryModalOpen(false);
-        setSelectedHistoryId(null); // Limpiar historial seleccionado
-        fetchHistory(currentPage); // Recargar los datos al cerrar el modal
+        setSelectedHistoryId(null);
+        fetchHistory(currentPage); // Recargar datos
     };
 
-    // Función para eliminar un historial clínico
+    // Eliminar historial clínico
     const handleDeleteHistory = async (historyId) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/pet-clinical-history/${historyId}/block`, {
-                method: 'PUT',
-            });
-    
-            if (!response.ok) {
-                throw new Error('Error al eliminar el historial clínico');
-            }
-    
-            alert('Historial clínico eliminado exitosamente.'); // Alerta de éxito
-            fetchHistory(currentPage); // Recargar los datos después de eliminar
+            await blockHistory(historyId);
+            alert('Historial clínico eliminado exitosamente.');
+            fetchHistory(currentPage);
         } catch (error) {
             console.error('Error al eliminar el historial clínico:', error);
-            alert('Ocurrió un error al intentar eliminar el historial clínico.'); // Alerta de error
+            alert('Ocurrió un error al intentar eliminar el historial clínico.');
         }
     };
-    
-    // Cargar datos del historial clínico al montar el componente o cambiar de página
+
+    // Cargar datos al montar el componente o cambiar de página
     useEffect(() => {
         if (petId) fetchHistory(currentPage);
     }, [petId, currentPage]);
 
     return (
         <div>
+            <h3>Historial Médico</h3>
             {/* Tabla de historial clínico */}
-            <h3>Historial Medico</h3>
             <table className="table">
                 <thead>
                     <tr>
@@ -124,22 +114,21 @@ function C_TablaHistClin({ petId }) {
                                         : 'Desconocido'}
                                 </td>
                                 <td>
-                                
-                                <div className="d-flex">
-                                    {localStorage.getItem('userType') === 'empleado' && (
-                                    <>
-                                        <Btn_Edit
-                                            nameId={item.idHistory}
-                                            showContent="icon"
-                                            onEdit={() => openEditHistoryModal(item.idHistory)}
-                                        />  
-                                        <Btn_Delete
-                                            nameId={item.idHistory}
-                                            showContent="icon"
-                                            onDelete={() => handleDeleteHistory(item.idHistory)}
-                                        />
-                                    </>
-                                )}
+                                    <div className="d-flex">
+                                        {localStorage.getItem('userType') === 'empleado' && (
+                                            <>
+                                                <Btn_Edit
+                                                    nameId={item.idHistory}
+                                                    showContent="icon"
+                                                    onEdit={() => openEditHistoryModal(item.idHistory)}
+                                                />
+                                                <Btn_Delete
+                                                    nameId={item.idHistory}
+                                                    showContent="icon"
+                                                    onDelete={() => handleDeleteHistory(item.idHistory)}
+                                                />
+                                            </>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -162,15 +151,12 @@ function C_TablaHistClin({ petId }) {
                     onPageChange={(page) => setCurrentPage(page)}
                 />
                 {localStorage.getItem('userType') === 'empleado' && (
-                                    <>
-                                        <Btn_New
-                                    nameId="btnAddNewHistory"
-                                    showContent="text+icon"
-                                    onNew={openNewHistoryModal}
-                                />
-                                    </>
-                                )}
-                
+                    <Btn_New
+                        nameId="btnAddNewHistory"
+                        showContent="text+icon"
+                        onNew={openNewHistoryModal}
+                    />
+                )}
             </div>
 
             {/* Modal de nuevo historial */}

@@ -1,30 +1,35 @@
-
-import React, { useState, useEffect } from 'react';
-import SelectImput from '../../../Components/CS_General/Form Box/SelectImput/SelectImput';
-import DateTimePicker from '../../../Components/CS_General/Form Box/DateTimePicker/DateTimePicker';
-import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
+import React, { useState, useEffect } from "react";
+import SelectImput from "../../../Components/CS_General/Form Box/SelectImput/SelectImput";
+import DateTimePicker from "../../../Components/CS_General/Form Box/DateTimePicker/DateTimePicker";
+import Box_Text_Value from "../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value";
+import { getPetNameById } from "../../../Services/petService";
+import { searchServicesByName } from "../../../Services/serviceService";
+import { fetchActivePaymentMethods } from "../../../Services/metPagService";
+import { getQuoteById, updateQuote } from "../../../Services/quotesService";
 
 function ModalEditQuote({ quoteId, onClose, onUpdate }) {
     const [quoteData, setQuoteData] = useState({
-        petId: '',
-        serviceId: '',
-        metPagId: '',
-        statusPag: '',
-        status: '',
-        date: '',
-        hour: '',
-        comments: '',
+        petId: "",
+        serviceId: "",
+        metPagId: "",
+        statusPag: "",
+        status: "",
+        date: "",
+        hour: "",
+        comments: "",
     });
 
-    const [pets, setPets] = useState([]);
-    const [services, setServices] = useState([]);
+    const [petMessage, setPetMessage] = useState("");
+    const [serviceMessage, setServiceMessage] = useState("");
     const [paymentMethods, setPaymentMethods] = useState([]);
+    const [errors, setErrors] = useState({});
+    const [timeStep, setTimeStep] = useState("00:15:00");
 
     useEffect(() => {
-        // Fetch quote data to edit
-        fetch(`http://localhost:8080/api/quotes/${quoteId}`)
-            .then(response => response.json())
-            .then(data => {
+        const loadData = async () => {
+            try {
+                // Fetch quote data
+                const data = await getQuoteById(quoteId);
                 setQuoteData({
                     petId: data.pet.idPet,
                     serviceId: data.service.idService,
@@ -35,24 +40,30 @@ function ModalEditQuote({ quoteId, onClose, onUpdate }) {
                     hour: data.hour,
                     comments: data.comments,
                 });
-            })
-            .catch(error => console.error('Error fetching quote:', error));
 
-        // Fetch related data
-        fetch(`http://localhost:8080/api/pets/search?status=1`)
-            .then(response => response.json())
-            .then(data => setPets(data.content || []))
-            .catch(error => console.error('Error fetching pets:', error));
+                // Fetch pet name for validation message
+                const petMessage = await getPetNameById(data.pet.idPet);
+                setPetMessage(petMessage);
 
-        fetch(`http://localhost:8080/api/services/search?status=1`)
-            .then(response => response.json())
-            .then(data => setServices(data.content || []))
-            .catch(error => console.error('Error fetching services:', error));
+                // Fetch service name for validation message
+                const serviceResponse = await searchServicesByName(data.service.name);
+                const service = serviceResponse.content[0];
+                setServiceMessage(service ? `Servicio encontrado: ${service.name}` : "Servicio no encontrado");
 
-        fetch(`http://localhost:8080/api/metpags/active`)
-            .then(response => response.json())
-            .then(data => setPaymentMethods(data || []))
-            .catch(error => console.error('Error fetching payment methods:', error));
+                // Load payment methods
+                const methods = await fetchActivePaymentMethods();
+                setPaymentMethods(methods);
+
+                // Update timeStep based on service category
+                if (service && service.category.timeSpan) {
+                    setTimeStep(service.category.timeSpan);
+                }
+            } catch (error) {
+                console.error("Error al cargar los datos:", error);
+            }
+        };
+
+        loadData();
     }, [quoteId]);
 
     const handleChange = (e) => {
@@ -63,20 +74,67 @@ function ModalEditQuote({ quoteId, onClose, onUpdate }) {
         }));
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        // Validate fields
-        if (!quoteData.petId || !quoteData.serviceId || !quoteData.metPagId || !quoteData.date || !quoteData.hour) {
-            alert('Por favor, completa todos los campos requeridos.');
+    const handleFindPet = async () => {
+        if (!quoteData.petId.trim()) {
+            setPetMessage("Por favor, ingrese un ID de mascota válido.");
             return;
         }
 
-        // Prepare the data in the correct format
+        try {
+            const message = await getPetNameById(quoteData.petId);
+            setPetMessage(message);
+        } catch (error) {
+            setPetMessage(error || "Ocurrió un error al buscar la mascota.");
+        }
+    };
+
+    const handleFindService = async () => {
+        if (!quoteData.serviceId.trim()) {
+            setServiceMessage("Por favor, ingrese un nombre de servicio válido.");
+            return;
+        }
+
+        try {
+            const serviceResponse = await searchServicesByName(quoteData.serviceId);
+            const service = serviceResponse.content[0];
+            if (service) {
+                setServiceMessage(`Servicio encontrado: ${service.name}`);
+                setQuoteData((prevState) => ({
+                    ...prevState,
+                    serviceId: service.idService,
+                }));
+                setTimeStep(service.category.timeSpan || "00:15:00");
+            } else {
+                setServiceMessage("No se encontró un servicio con el nombre proporcionado.");
+            }
+        } catch (error) {
+            setServiceMessage("Ocurrió un error al buscar el servicio.");
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        if (!quoteData.petId) newErrors.petId = "Selecciona una mascota.";
+        if (!quoteData.serviceId) newErrors.serviceId = "Selecciona un servicio.";
+        if (!quoteData.metPagId) newErrors.metPagId = "Selecciona un método de pago.";
+        if (!quoteData.date) newErrors.date = "Selecciona una fecha.";
+        if (!quoteData.hour) newErrors.hour = "Selecciona una hora.";
+        return newErrors;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const newErrors = validateForm();
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
         const payload = {
-            pet: { idPet: quoteData.petId },
-            service: { idService: quoteData.serviceId },
-            metPag: { idMetPag: quoteData.metPagId },
+            pet: { idPet: parseInt(quoteData.petId) },
+            service: { idService: parseInt(quoteData.serviceId) },
+            metPag: { idMetPag: parseInt(quoteData.metPagId) },
             date: quoteData.date,
             hour: quoteData.hour,
             comments: quoteData.comments,
@@ -84,28 +142,14 @@ function ModalEditQuote({ quoteId, onClose, onUpdate }) {
             status: quoteData.status,
         };
 
-        fetch(`http://localhost:8080/api/quotes/update/${quoteId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al actualizar la cita.');
-                }
-                return response.text();
-            })
-            .then(() => {
-                alert('Cita actualizada exitosamente.');
-                onUpdate();
-                onClose();
-            })
-            .catch(error => {
-                console.error('Error updating quote:', error);
-                alert('Error al actualizar la cita.');
-            });
+        try {
+            await updateQuote(quoteId, payload);
+            alert("Cita actualizada exitosamente.");
+            onUpdate();
+            onClose();
+        } catch (error) {
+            alert(error || "Error al actualizar la cita.");
+        }
     };
 
     return (
@@ -123,26 +167,36 @@ function ModalEditQuote({ quoteId, onClose, onUpdate }) {
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                            <SelectImput
-                                label="Mascota"
+                            <Box_Text_Value
+                                Label="ID Mascota"
+                                V_Text={quoteData.petId}
+                                onChange={handleChange}
                                 name="petId"
-                                value={quoteData.petId}
-                                onChange={handleChange}
-                                options={pets.map((pet) => ({
-                                    value: pet.idPet,
-                                    label: pet.name,
-                                }))}
+                                required
                             />
-                            <SelectImput
-                                label="Servicio"
+                            <button type="button" className="btn btn-secondary" onClick={handleFindPet}>
+                                Buscar Mascota
+                            </button>
+                            {petMessage && (
+                                <p className={petMessage.includes("error") ? "text-danger" : "text-success"}>
+                                    {petMessage}
+                                </p>
+                            )}
+                            <Box_Text_Value
+                                Label="Nombre del Servicio"
+                                V_Text={quoteData.serviceId}
+                                onChange={handleChange}
                                 name="serviceId"
-                                value={quoteData.serviceId}
-                                onChange={handleChange}
-                                options={services.map((service) => ({
-                                    value: service.idService,
-                                    label: service.name,
-                                }))}
+                                required
                             />
+                            <button type="button" className="btn btn-secondary" onClick={handleFindService}>
+                                Buscar Servicio
+                            </button>
+                            {serviceMessage && (
+                                <p className={serviceMessage.includes("error") ? "text-danger" : "text-success"}>
+                                    {serviceMessage}
+                                </p>
+                            )}
                             <SelectImput
                                 label="Método de Pago"
                                 name="metPagId"
@@ -159,6 +213,7 @@ function ModalEditQuote({ quoteId, onClose, onUpdate }) {
                                 name="date"
                                 value={quoteData.date}
                                 onChange={handleChange}
+                                dateRestriction="future"
                             />
                             <DateTimePicker
                                 label="Hora"
@@ -166,6 +221,7 @@ function ModalEditQuote({ quoteId, onClose, onUpdate }) {
                                 name="hour"
                                 value={quoteData.hour}
                                 onChange={handleChange}
+                                timeStep={timeStep}
                             />
                             <Box_Text_Value
                                 Label="Comentarios"
@@ -175,11 +231,7 @@ function ModalEditQuote({ quoteId, onClose, onUpdate }) {
                             />
                         </div>
                         <div className="modal-footer">
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={onClose}
-                            >
+                            <button type="button" className="btn btn-secondary" onClick={onClose}>
                                 Cancelar
                             </button>
                             <button type="submit" className="btn btn-primary">

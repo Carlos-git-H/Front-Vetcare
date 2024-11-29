@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import "../../../Layouts/Layouts.css";
 import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
+import { searchCategoryByName } from '../../../Services/categoryService';
+import { searchEspecieByName } from '../../../Services/especieService';
+import { createService } from '../../../Services/serviceService';
 
 function ModalNewService({ onClose, onUpdate }) {
     const [serviceData, setServiceData] = useState({
@@ -17,10 +20,9 @@ function ModalNewService({ onClose, onUpdate }) {
         status: '1',
     });
 
-    const [categoryData, setCategoryData] = useState(null); // Datos de la categoría encontrada
-    const [categoryError, setCategoryError] = useState(null); // Error al buscar categoría
-    const [especieData, setEspecieData] = useState(null); // Datos de la especie encontrada
-    const [especieError, setEspecieError] = useState(null); // Error al buscar especie
+    const [categoryMessage, setCategoryMessage] = useState(null);
+    const [especieMessage, setEspecieMessage] = useState(null);
+    const [formMessage, setFormMessage] = useState(null);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,110 +32,107 @@ function ModalNewService({ onClose, onUpdate }) {
         }));
     };
 
-    // Busca categoría por nombre
-    const handleFindCategory = () => {
-        if (!serviceData.categoryName) {
-            setCategoryError("Por favor, ingrese un nombre de categoría válido.");
+    const handleFindCategory = async () => {
+        if (!serviceData.categoryName.trim()) {
+            setCategoryMessage({ text: "Por favor, ingrese un nombre de categoría válido.", type: "error" });
             return;
         }
 
-        fetch(`http://localhost:8080/api/categories/search?name=${serviceData.categoryName}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al buscar la categoría.");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.content && data.content.length > 0) {
-                    const category = data.content[0];
-                    setServiceData(prevState => ({
-                        ...prevState,
-                        categoryId: category.idCategory,
-                    }));
-                    setCategoryData(category);
-                    setCategoryError(null);
-                } else {
-                    setCategoryError("No se encontró una categoría con el nombre proporcionado.");
-                    setCategoryData(null);
-                }
-            })
-            .catch(error => {
-                console.error("Error en la búsqueda de categoría:", error);
-                setCategoryError("Ocurrió un error al buscar la categoría.");
-                setCategoryData(null);
-            });
+        try {
+            const category = await searchCategoryByName(serviceData.categoryName);
+            if (category) {
+                setServiceData((prevState) => ({
+                    ...prevState,
+                    categoryId: category.idCategory,
+                }));
+                setCategoryMessage({ text: `Categoría encontrada: ${category.name}`, type: "success" });
+            } else {
+                setCategoryMessage({ text: "No se encontró una categoría con el nombre proporcionado.", type: "error" });
+            }
+        } catch (error) {
+            console.error("Error al buscar categoría:", error);
+            setCategoryMessage({ text: "Error al buscar la categoría.", type: "error" });
+        }
     };
 
-    // Busca especie por nombre
-    const handleFindEspecie = () => {
-        if (!serviceData.especieName) {
-            setEspecieError("Por favor, ingrese un nombre de especie válido.");
+    const handleFindEspecie = async () => {
+        if (!serviceData.especieName.trim()) {
+            setEspecieMessage({ text: "Por favor, ingrese un nombre de especie válido.", type: "error" });
             return;
         }
 
-        fetch(`http://localhost:8080/api/especies/search?name=${serviceData.especieName}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al buscar la especie.");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.content && data.content.length > 0) {
-                    const especie = data.content[0];
-                    setServiceData(prevState => ({
-                        ...prevState,
-                        especieId: especie.idEspecie,
-                    }));
-                    setEspecieData(especie);
-                    setEspecieError(null);
-                } else {
-                    setEspecieError("No se encontró una especie con el nombre proporcionado.");
-                    setEspecieData(null);
-                }
-            })
-            .catch(error => {
-                console.error("Error en la búsqueda de especie:", error);
-                setEspecieError("Ocurrió un error al buscar la especie.");
-                setEspecieData(null);
-            });
+        try {
+            const especie = await searchEspecieByName(serviceData.especieName);
+            if (especie) {
+                setServiceData((prevState) => ({
+                    ...prevState,
+                    especieId: especie.idEspecie,
+                }));
+                setEspecieMessage({ text: `Especie encontrada: ${especie.name}`, type: "success" });
+            } else {
+                setEspecieMessage({ text: "No se encontró una especie con el nombre proporcionado.", type: "error" });
+            }
+        } catch (error) {
+            console.error("Error al buscar especie:", error);
+            setEspecieMessage({ text: "Error al buscar la especie.", type: "error" });
+        }
     };
 
-    const handleSubmit = (e) => {
+    const validateFields = () => {
+        if (!serviceData.name.trim()) {
+            setFormMessage({ text: "El campo Nombre no puede estar vacío.", type: "error" });
+            return false;
+        }
+        if (!serviceData.categoryId) {
+            setFormMessage({ text: "Debe seleccionar una categoría válida.", type: "error" });
+            return false;
+        }
+        if (!serviceData.especieId) {
+            setFormMessage({ text: "Debe seleccionar una especie válida.", type: "error" });
+            return false;
+        }
+        if (!serviceData.description.trim()) {
+            setFormMessage({ text: "El campo Descripción no puede estar vacío.", type: "error" });
+            return false;
+        }
+        if (!serviceData.recommendedAge.trim()) {
+            setFormMessage({ text: "El campo Edad Recomendada no puede estar vacío.", type: "error" });
+            return false;
+        }
+        if (!serviceData.recommendedFrequency.trim()) {
+            setFormMessage({ text: "El campo Frecuencia Recomendada no puede estar vacío.", type: "error" });
+            return false;
+        }
+        if (!/^\d+(\.\d{1,2})?$/.test(serviceData.price)) {
+            setFormMessage({ text: "El campo Precio solo puede contener números y un punto decimal.", type: "error" });
+            return false;
+        }
+        if (!serviceData.dirImage.trim()) {
+            setFormMessage({ text: "El campo Ruta de Imagen no puede estar vacío.", type: "error" });
+            return false;
+        }
+        setFormMessage(null); // Limpia el mensaje si todo está válido
+        return true;
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!serviceData.categoryId || !serviceData.especieId) {
-            alert("Por favor, busque y seleccione una categoría y una especie antes de crear el servicio.");
-            return;
-        }
+        if (!validateFields()) return;
 
-        fetch('http://localhost:8080/api/services', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        try {
+            await createService({
                 ...serviceData,
                 category: { idCategory: serviceData.categoryId },
                 especie: { idEspecie: serviceData.especieId },
-            }),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al crear el servicio.");
-                }
-                return response.text();
-            })
-            .then(() => {
-                alert("Servicio creado exitosamente.");
-                onUpdate();
-                onClose();
-            })
-            .catch(error => {
-                console.error("Error al crear el servicio:", error);
-                alert("Error al crear el servicio.");
             });
+            setFormMessage({ text: "Servicio creado exitosamente.", type: "success" });
+            onUpdate();
+            onClose();
+        } catch (error) {
+            console.error("Error al crear el servicio:", error);
+            setFormMessage({ text: "Error al crear el servicio.", type: "error" });
+        }
     };
 
     return (
@@ -168,10 +167,9 @@ function ModalNewService({ onClose, onUpdate }) {
                             <button type="button" className="btn btn-secondary" onClick={handleFindCategory}>
                                 Buscar Categoría
                             </button>
-                            {categoryError && <p className="text-danger">{categoryError}</p>}
-                            {categoryData && (
-                                <p className="text-success">
-                                    Categoría encontrada: {categoryData.name}
+                            {categoryMessage && (
+                                <p className={categoryMessage.type === "error" ? "text-danger" : "text-success"}>
+                                    {categoryMessage.text}
                                 </p>
                             )}
                             <Box_Text_Value
@@ -184,10 +182,9 @@ function ModalNewService({ onClose, onUpdate }) {
                             <button type="button" className="btn btn-secondary" onClick={handleFindEspecie}>
                                 Buscar Especie
                             </button>
-                            {especieError && <p className="text-danger">{especieError}</p>}
-                            {especieData && (
-                                <p className="text-success">
-                                    Especie encontrada: {especieData.name}
+                            {especieMessage && (
+                                <p className={especieMessage.type === "error" ? "text-danger" : "text-success"}>
+                                    {especieMessage.text}
                                 </p>
                             )}
                             <Box_Text_Value
@@ -219,6 +216,13 @@ function ModalNewService({ onClose, onUpdate }) {
                                 type="number"
                                 required
                             />
+                            <Box_Text_Value
+                                Label="Ruta de Imagen"
+                                V_Text={serviceData.dirImage}
+                                onChange={handleChange}
+                                name="dirImage"
+                                required
+                            />
                             <div className="form-group">
                                 <label>Estado:</label>
                                 <select
@@ -231,6 +235,11 @@ function ModalNewService({ onClose, onUpdate }) {
                                     <option value="0">Bloqueado</option>
                                 </select>
                             </div>
+                            {formMessage && (
+                                <p className={formMessage.type === "error" ? "text-danger" : "text-success"}>
+                                    {formMessage.text}
+                                </p>
+                            )}
                         </div>
                         <div className="modal-footer">
                             <button

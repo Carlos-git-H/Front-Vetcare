@@ -8,9 +8,10 @@ import Box_Text_Empty from '../CS_General/Form Box/Box_Text/Box_Text_Empty';
 import ModalEditQuote from '../../Layouts/LS_Employees/ModalQuote/ModalEditQuote';
 import ModelNewQuote from '../../Layouts/LS_Employees/ModalQuote/ModelNewQuote';
 import SelectImput from '../CS_General/Form Box/SelectImput/SelectImput';
-import DateTimePicker from "../CS_General/Form Box/DateTimePicker/DateTimePicker"
+import DateTimePicker from "../CS_General/Form Box/DateTimePicker/DateTimePicker";
 import Btn_Confirm from '../CS_General/Buttons/Btn_Confirm';
 import Btn_ConfirmPag from '../CS_General/Buttons/Btn_ConfirmPag';
+import { fetchQuotes, cancelQuote, confirmQuote, confirmPayment } from '../../Services/quotesService';
 
 function C_TablaCitas() {
     const [quotes, setQuotes] = useState([]); // Lista de citas
@@ -36,100 +37,49 @@ function C_TablaCitas() {
 
     // Cargar citas al iniciar
     useEffect(() => {
-        fetchQuotes(currentPage);
+        loadQuotes();
     }, [currentPage]);
 
-    // Obtener citas desde la API
-    const fetchQuotes = (page, customFilters = {}) => {
-        const { date, status, dni, serviceName } = { ...filters, ...customFilters };
-    
-        const formattedDate = date ? new Date(date).toISOString().split('T')[0] : ''; // Formato yyyy-MM-dd
-    
-        const queryParams = new URLSearchParams({
-            page,
-            size: 9,
-            ...(formattedDate && { date: formattedDate }),
-            ...(status && { status }),
-            ...(dni && { dni }),
-            ...(serviceName && { serviceName }),
-        }).toString();
-    
-        fetch(`http://localhost:8080/api/quotes/search?${queryParams}`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error al obtener las citas");
-                }
-                return response.json();
-            })
-            .then((data) => {
-                setQuotes(data.content || []);
-                setTotalPages(data.totalPages || 0);
-            })
-            .catch((error) => console.error("Error:", error));
+    // Obtener citas 
+    const loadQuotes = async () => {
+        try {
+            const data = await fetchQuotes({ page: currentPage, filters });
+            setQuotes(data.content || []);
+            setTotalPages(data.totalPages || 0);
+        } catch (error) {
+            console.error("Error al cargar las citas:", error);
+        }
     };
-    const handleCancelQuote = (quoteId) => {
-        fetch(`http://localhost:8080/api/quotes/${quoteId}/cancel`, {
-            method: 'PUT',
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    return response.text().then((message) => {
-                        throw new Error(message);
-                    });
-                }
-                return response.text();
-            })
-            .then((message) => {
-                alert(message); // Muestra el mensaje de éxito
-                fetchQuotes(currentPage); // Refresca la tabla
-            })
-            .catch((error) => {
-                alert(`Error: ${error.message}`); // Muestra el mensaje de error
-            });
+
+    const handleCancelQuote = async (quoteId) => {
+        try {
+            const message = await cancelQuote(quoteId);
+            alert(message);
+            loadQuotes(); 
+        } catch (error) {
+            alert(`Error al cancelar la cita: ${error.message}`);
+        }
     };
-    
-    const handleConfirmQuote = (quoteId) => {
-        fetch(`http://localhost:8080/api/quotes/${quoteId}/confirm`, {
-            method: 'PUT',
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    return response.text().then((message) => {
-                        throw new Error(message);
-                    });
-                }
-                return response.text();
-            })
-            .then((message) => {
-                alert(message); // Muestra el mensaje de éxito
-                fetchQuotes(currentPage); // Refresca la tabla
-            })
-            .catch((error) => {
-                alert(`Error: ${error.message}`); // Muestra el mensaje de error
-            });
+
+    const handleConfirmQuote = async (quoteId) => {
+        try {
+            const message = await confirmQuote(quoteId);
+            alert(message);
+            loadQuotes(); 
+        } catch (error) {
+            alert(`Error al confirmar la cita: ${error.message}`);
+        }
     };
-    
-    const handleConfirmPayment = (quoteId) => {
-        fetch(`http://localhost:8080/api/quotes/${quoteId}/confirm-payment`, {
-            method: 'PUT',
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    return response.text().then((message) => {
-                        throw new Error(message);
-                    });
-                }
-                return response.text();
-            })
-            .then((message) => {
-                alert(message); // Muestra el mensaje de éxito
-                fetchQuotes(currentPage); // Refresca la tabla
-            })
-            .catch((error) => {
-                alert(`Error: ${error.message}`); // Muestra el mensaje de error
-            });
+
+    const handleConfirmPayment = async (quoteId) => {
+        try {
+            const message = await confirmPayment(quoteId);
+            alert(message);
+            loadQuotes(); 
+        } catch (error) {
+            alert(`Error al confirmar el pago: ${error.message}`);
+        }
     };
-    
 
     // Manejar cambios en los filtros
     const handleFilterChange = (e) => {
@@ -144,27 +94,22 @@ function C_TablaCitas() {
     const handleSearch = (e) => {
         e.preventDefault();
         setCurrentPage(0);
-        fetchQuotes(0, filters);
+        loadQuotes();
     };
-    // Función para formatear la fecha
+
+    // Formatear fecha
     const formatDate = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses comienzan desde 0
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
+        return date.toLocaleDateString('es-ES');
     };
 
-    // Función para formatear la hora
+    // Formatear hora
     const formatTime = (timeString) => {
         if (!timeString) return '';
         const [hour, minute] = timeString.split(':'); // Dividir la hora y los minutos
         return `${hour}:${minute}`;
     };
-
-
- 
 
     const openEditModal = (quoteId) => {
         setSelectedQuoteId(quoteId);
@@ -281,28 +226,35 @@ function C_TablaCitas() {
                                             showContent="icon"
                                             onEdit={() => openEditModal(quote.idQuote)}
                                         />
-                                        <Btn_Delete
-                                            nameId={quote.idQuote}
-                                            showContent="icon"
-                                            onDelete={() => handleCancelQuote(quote.idQuote)}
-                                        />
-                                        <Btn_Confirm
-                                            nameId={`confirm-${quote.idQuote}`}
-                                            showContent="icon"
-                                            onClick={() => handleConfirmQuote(quote.idQuote)}
-                                        />
-                                        <Btn_ConfirmPag
-                                            nameId={`confirm-payment-${quote.idQuote}`}
-                                            showContent="icon"
-                                            onClick={() => handleConfirmPayment(quote.idQuote)}
-                                        />
+                                        {quote.status === '1' &&(
+                                            <> 
+                                                <Btn_Delete
+                                                    nameId={quote.idQuote}
+                                                    showContent="icon"
+                                                    onDelete={() => handleCancelQuote(quote.idQuote)}
+                                                />
+                                                <Btn_Confirm
+                                                    nameId={`confirm-${quote.idQuote}`}
+                                                    showContent="icon"
+                                                    onClick={() => handleConfirmQuote(quote.idQuote)}
+                                                />
+                                            </>
+                                        )}
+                                        
+                                        {quote.statusPag === '1' && quote.status !== '0' && (
+                                            <Btn_ConfirmPag
+                                                nameId={`confirm-payment-${quote.idQuote}`}
+                                                showContent="icon"
+                                                onClick={() => handleConfirmPayment(quote.idQuote)}
+                                            />
+                                        )}
                                     </div>
                                 </td>
                             </tr>
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="8" className="text-center">
+                            <td colSpan="10" className="text-center">
                                 No se encontraron citas.
                             </td>
                         </tr>
@@ -329,13 +281,13 @@ function C_TablaCitas() {
                 <ModalEditQuote
                     quoteId={selectedQuoteId}
                     onClose={closeEditModal}
-                    onUpdate={() => fetchQuotes(currentPage)}
+                    onUpdate={loadQuotes}
                 />
             )}
             {isNewModalOpen && (
                 <ModelNewQuote
                     onClose={closeNewModal}
-                    onUpdate={() => fetchQuotes(currentPage)}
+                    onUpdate={loadQuotes}
                 />
             )}
         </div>

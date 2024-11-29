@@ -7,6 +7,7 @@ import Pagination from '../CS_General/Pagination';
 import Box_Text_Empty from '../CS_General/Form Box/Box_Text/Box_Text_Empty';
 import ModelEditService from '../../Layouts/LS_Employees/ModalService/ModalEditService';
 import ModelNewService from '../../Layouts/LS_Employees/ModalService/ModalNewService';
+import { fetchServices, blockService } from '../../Services/serviceService';
 
 function C_TablaServicios() {
     const [services, setServices] = useState([]);
@@ -23,31 +24,17 @@ function C_TablaServicios() {
     const [selectedServiceId, setSelectedServiceId] = useState(null);
 
     useEffect(() => {
-        fetchServices(currentPage, { status: '1' });
+        loadServices(currentPage, filters);
     }, [currentPage]);
 
-    const fetchServices = (page, customFilters = {}) => {
-        const { name, categoryName, especieName, status } = { ...filters, ...customFilters };
-
-        const queryParams = new URLSearchParams({
-            page,
-            size: 9,
-            ...(name && { name }),
-            ...(categoryName && { categoryName }),
-            ...(especieName && { especieName }),
-            ...(status && { status }),
-        }).toString();
-
-        fetch(`http://localhost:8080/api/services/search?${queryParams}`)
-            .then((response) => {
-                if (!response.ok) throw new Error('Error al obtener los servicios');
-                return response.json();
-            })
-            .then((data) => {
-                setServices(data.content || []);
-                setTotalPages(data.totalPages || 0);
-            })
-            .catch((error) => console.error('Error:', error));
+    const loadServices = async (page, customFilters = {}) => {
+        try {
+            const data = await fetchServices({ filters: { ...filters, ...customFilters }, currentPage: page });
+            setServices(data.content || []);
+            setTotalPages(data.totalPages || 0);
+        } catch (error) {
+            console.error('Error al obtener los servicios:', error);
+        }
     };
 
     const handleFilterChange = (e) => {
@@ -61,16 +48,16 @@ function C_TablaServicios() {
     const handleSearch = (e) => {
         e.preventDefault();
         setCurrentPage(0);
-        fetchServices(0, filters);
+        loadServices(0, filters);
     };
 
-    const handleBlockService = (serviceId) => {
-        fetch(`http://localhost:8080/api/services/${serviceId}/block`, { method: 'PUT' })
-            .then((response) => {
-                if (!response.ok) throw new Error('Error al bloquear el servicio');
-                fetchServices(currentPage);
-            })
-            .catch((error) => console.error('Error al bloquear el servicio:', error));
+    const handleBlockService = async (serviceId) => {
+        try {
+            await blockService(serviceId);
+            loadServices(currentPage, filters);
+        } catch (error) {
+            console.error('Error al bloquear el servicio:', error);
+        }
     };
 
     const openEditModal = (serviceId) => {
@@ -212,13 +199,13 @@ function C_TablaServicios() {
                 <ModelEditService
                     serviceId={selectedServiceId}
                     onClose={closeEditModal}
-                    onUpdate={() => fetchServices(currentPage)}
+                    onUpdate={() => loadServices(currentPage)}
                 />
             )}
             {isNewModalOpen && (
                 <ModelNewService
                     onClose={closeNewModal}
-                    onUpdate={() => fetchServices(currentPage)}
+                    onUpdate={() => loadServices(currentPage)}
                 />
             )}
         </div>

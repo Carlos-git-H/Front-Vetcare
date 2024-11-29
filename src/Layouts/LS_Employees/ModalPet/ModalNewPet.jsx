@@ -2,27 +2,31 @@ import React, { useState } from 'react';
 import "../../../Layouts/Layouts.css";
 import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
 import HiddenInput from '../../../Components/CS_General/Form Box/Box_Text/HiddenInput';
+import { getClientByDni } from '../../../Services/clientService';
+import { searchRaceByName } from '../../../Services/raceService';
+import { createPet } from '../../../Services/PetService';
 
 function ModalNewPet({ onClose, onUpdate }) {
     const [petData, setPetData] = useState({
         name: '',
-        raceId: '',
+        raceName: '',
         sex: '',
         weight: '',
         dateNac: '',
         comments: '',
         dniClient: '',
         clientId: '',
+        raceId: '',
         dirImage: 'PetFoto.png',
         status: '1',
     });
 
-    const [clientData, setClientData] = useState(null); // Datos del cliente encontrado
-    const [clientError, setClientError] = useState(null); // Error al buscar cliente
-    const [raceData, setRaceData] = useState(null); // Datos de la raza encontrada
-    const [raceError, setRaceError] = useState(null); // Error al buscar raza
+    const [clientData, setClientData] = useState(null);
+    const [clientError, setClientError] = useState(null);
+    const [raceData, setRaceData] = useState(null);
+    const [raceError, setRaceError] = useState(null);
+    const [errors, setErrors] = useState({});
 
-    // Maneja cambios en los campos del formulario
     const handleChange = (e) => {
         const { name, value } = e.target;
         setPetData((prevState) => ({
@@ -31,82 +35,90 @@ function ModalNewPet({ onClose, onUpdate }) {
         }));
     };
 
-    // Busca cliente por DNI
-    const handleFindClient = () => {
-        if (!petData.dniClient) {
-            setClientError("Por favor, ingrese un DNI válido.");
+    // Validar campos antes de enviar
+    const validateFields = () => {
+        const newErrors = {};
+
+        if (!petData.name.trim()) newErrors.name = "El nombre no puede estar vacío.";
+        if (!petData.raceName.trim()) newErrors.raceName = "La raza no puede estar vacía.";
+        if (!/^[A-Za-z\s]+$/.test(petData.raceName)) newErrors.raceName = "La raza solo debe contener letras.";
+        if (!petData.sex) newErrors.sex = "Seleccione el sexo.";
+        if (!petData.weight.trim()) newErrors.weight = "El peso no puede estar vacío.";
+        if (!/^\d+(\.\d+)?$/.test(petData.weight)) newErrors.weight = "El peso debe ser un número válido.";
+        if (!petData.dateNac.trim()) {
+            newErrors.dateNac = "La fecha de nacimiento no puede estar vacía.";
+        } else if (new Date(petData.dateNac) > new Date()) {
+            newErrors.dateNac = "La fecha no puede ser mayor a la fecha actual.";
+        }
+        if (!petData.dniClient.trim()) newErrors.dniClient = "El DNI no puede estar vacío.";
+        if (!/^\d{8}$/.test(petData.dniClient)) newErrors.dniClient = "El DNI debe tener 8 dígitos.";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+        // Dentro de handleFindClient:
+    const handleFindClient = async () => {
+        if (!/^\d{8}$/.test(petData.dniClient)) {
+            setClientError("El DNI debe tener exactamente 8 dígitos.");
             return;
         }
 
-        fetch(`http://localhost:8080/api/clients/search?dni=${petData.dniClient}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al buscar el cliente.");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.content && data.content.length > 0) {
-                    const client = data.content[0];
-                    setPetData((prevState) => ({
-                        ...prevState,
-                        clientId: client.idClient,
-                    }));
-                    setClientData({
-                        name: client.firstName,
-                        lastName: client.firstLastName,
-                    });
-                    setClientError(null); // Limpiar errores
-                } else {
-                    setClientError("No se encontró un cliente con el DNI proporcionado.");
-                    setClientData(null); // Limpiar datos del cliente
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                setClientError("Ocurrió un error al buscar el cliente.");
+        try {
+            const data = await getClientByDni(petData.dniClient);
+            if (data.content && data.content.length > 0) {
+                const client = data.content[0];
+                setPetData((prevState) => ({
+                    ...prevState,
+                    clientId: client.idClient,
+                }));
+                setClientData({
+                    name: client.firstName,
+                    lastName: client.firstLastName,
+                });
+                setClientError(null); // Limpiar errores
+            } else {
+                setClientError("No se encontró un cliente con el DNI proporcionado.");
                 setClientData(null); // Limpiar datos del cliente
-            });
+            }
+        } catch (error) {
+            console.error("Error al buscar cliente por DNI:", error);
+            setClientError("Ocurrió un error al buscar el cliente.");
+            setClientData(null); // Limpiar datos del cliente
+        }
     };
-
-    // Busca raza por nombre
-    const handleFindRace = () => {
-        if (!petData.raceName) {
-            setRaceError("Por favor, ingrese un nombre de raza válido.");
+    const handleFindRace = async () => {
+        if (!/^[A-Za-z\s]+$/.test(petData.raceName)) {
+            setRaceError("El nombre de la raza solo debe contener letras.");
+            setRaceData(null);
             return;
         }
 
-        fetch(`http://localhost:8080/api/races/search?name=${petData.raceName}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al buscar la raza.");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.content && data.content.length > 0) {
-                    const race = data.content[0];
-                    setPetData((prevState) => ({
-                        ...prevState,
-                        raceId: race.idRace,
-                    }));
-                    setRaceData({ name: race.name });
-                    setRaceError(null); // Limpiar errores
-                } else {
-                    setRaceError("No se encontró una raza con el nombre proporcionado.");
-                    setRaceData(null); // Limpiar datos de la raza
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                setRaceError("Ocurrió un error al buscar la raza.");
-                setRaceData(null); // Limpiar datos de la raza
-            });
+        try {
+            const data = await searchRaceByName(petData.raceName);
+            if (data.content && data.content.length > 0) {
+                const race = data.content[0];
+                setPetData((prevState) => ({
+                    ...prevState,
+                    raceId: race.idRace,
+                }));
+                setRaceData({ name: race.name });
+                setRaceError(null);
+            } else {
+                setRaceError("No se encontró una raza con el nombre proporcionado.");
+                setRaceData(null);
+            }
+        } catch (error) {
+            console.error("Error al buscar raza:", error);
+            setRaceError("Error al buscar raza.");
+            setRaceData(null);
+        }
     };
 
-    // Maneja el envío del formulario para crear una nueva mascota
-    const handleCreatePet = (e) => {
+    const handleCreatePet = async (e) => {
         e.preventDefault();
+
+        if (!validateFields()) return;
 
         if (!petData.clientId) {
             alert("Por favor, busque y seleccione un cliente antes de crear la mascota.");
@@ -118,12 +130,8 @@ function ModalNewPet({ onClose, onUpdate }) {
             return;
         }
 
-        fetch('http://localhost:8080/api/pets', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        try {
+            await createPet({
                 name: petData.name,
                 race: { idRace: petData.raceId },
                 client: { idClient: petData.clientId },
@@ -133,23 +141,14 @@ function ModalNewPet({ onClose, onUpdate }) {
                 comments: petData.comments,
                 dirImage: petData.dirImage,
                 status: petData.status,
-            }),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al crear la mascota.");
-                }
-                return response.text();
-            })
-            .then(() => {
-                alert("Mascota creada exitosamente.");
-                onUpdate(); // Actualiza la tabla de mascotas
-                onClose(); // Cierra el modal
-            })
-            .catch(error => {
-                console.error("Error al crear la mascota:", error);
-                alert("Error al crear la mascota.");
             });
+            alert("Mascota creada exitosamente.");
+            onUpdate();
+            onClose();
+        } catch (error) {
+            console.error("Error al crear la mascota:", error);
+            alert("Error al crear la mascota.");
+        }
     };
 
     return (
@@ -172,59 +171,66 @@ function ModalNewPet({ onClose, onUpdate }) {
                                 V_Text={petData.name}
                                 onChange={handleChange}
                                 name="name"
-                                required
                             />
+                            {errors.name && <p className="text-danger">{errors.name}</p>}
+
                             <Box_Text_Value
                                 Label="Nombre de Raza"
                                 V_Text={petData.raceName}
                                 onChange={handleChange}
                                 name="raceName"
-                                required
                             />
                             <button type="button" className="btn btn-secondary" onClick={handleFindRace}>
                                 Buscar Raza
                             </button>
                             {raceError && <p className="text-danger">{raceError}</p>}
-                            {raceData && (
-                                <p className="text-success">
-                                    Raza: {raceData.name}
-                                </p>
-                            )}
+                            {raceData && <p className="text-success">Raza: {raceData.name}</p>}
                             <HiddenInput name="raceId" value={petData.raceId} />
-                            <Box_Text_Value
-                                Label="Sexo"
-                                V_Text={petData.sex}
-                                onChange={handleChange}
-                                name="sex"
-                                required
-                            />
+
+                            <div className="form-group">
+                                <label>Sexo:</label>
+                                <select
+                                    name="sex"
+                                    value={petData.sex}
+                                    onChange={handleChange}
+                                    className="input-box"
+                                >
+                                    <option value="">Seleccione</option>
+                                    <option value="M">Macho</option>
+                                    <option value="H">Hembra</option>
+                                </select>
+                                {errors.sex && <p className="text-danger">{errors.sex}</p>}
+                            </div>
+
                             <Box_Text_Value
                                 Label="Peso"
                                 V_Text={petData.weight}
                                 onChange={handleChange}
                                 name="weight"
-                                required
                             />
+                            {errors.weight && <p className="text-danger">{errors.weight}</p>}
+
                             <Box_Text_Value
                                 Label="Fecha de Nacimiento"
                                 V_Text={petData.dateNac}
                                 onChange={handleChange}
                                 name="dateNac"
                                 type="date"
-                                required
                             />
+                            {errors.dateNac && <p className="text-danger">{errors.dateNac}</p>}
+
                             <Box_Text_Value
                                 Label="Comentarios"
                                 V_Text={petData.comments}
                                 onChange={handleChange}
                                 name="comments"
                             />
+
                             <Box_Text_Value
                                 Label="DNI del Cliente"
                                 V_Text={petData.dniClient}
                                 onChange={handleChange}
                                 name="dniClient"
-                                required
                             />
                             <button type="button" className="btn btn-secondary" onClick={handleFindClient}>
                                 Buscar Cliente
@@ -236,6 +242,7 @@ function ModalNewPet({ onClose, onUpdate }) {
                                 </p>
                             )}
                             <HiddenInput name="clientId" value={petData.clientId} />
+
                             <div className="form-group">
                                 <label>Estado:</label>
                                 <select
@@ -250,11 +257,7 @@ function ModalNewPet({ onClose, onUpdate }) {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={onClose}
-                            >
+                            <button type="button" className="btn btn-secondary" onClick={onClose}>
                                 Cancelar
                             </button>
                             <button type="submit" className="btn btn-primary">

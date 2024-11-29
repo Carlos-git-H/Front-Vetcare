@@ -1,81 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
-import SelectImput from "../../../Components/CS_General/Form Box/SelectImput/SelectImput";
+import React, { useState, useEffect } from "react";
+import Box_Text_Value from "../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value";
 import DateTimePicker from "../../../Components/CS_General/Form Box/DateTimePicker/DateTimePicker";
+import SelectInput from "../../../Components/CS_General/Form Box/SelectImput/SelectImput";
+import { getPetNameById } from "../../../Services/petService";
+import { searchServicesByName } from "../../../Services/serviceService";
+import { fetchActivePaymentMethods } from "../../../Services/metPagService";
+import { createQuote } from "../../../Services/quotesService";
 
 function ModelNewQuote({ onClose, onUpdate }) {
     const [quoteData, setQuoteData] = useState({
-        petId: '',
-        serviceId: '',
-        metPagId: '',
-        date: '',
-        hour: '',
-        comments: '',
-        statusPag: '1',
-        status: '1',
+        petId: "",
+        serviceId: "",
+        metPagId: "",
+        date: "",
+        hour: "",
+        comments: "",
+        statusPag: "1",
+        status: "1",
     });
 
-    const [pets, setPets] = useState([]);
-    const [services, setServices] = useState([]);
+    const [timeStep, setTimeStep] = useState("00:15:00"); // Valor predeterminado
+    const [petMessage, setPetMessage] = useState("");
+    const [serviceMessage, setServiceMessage] = useState("");
     const [paymentMethods, setPaymentMethods] = useState([]);
     const [errors, setErrors] = useState({});
+    const [globalError, setGlobalError] = useState("");
 
     useEffect(() => {
-      // Carga de mascotas
-      fetch(`http://localhost:8080/api/pets/search?status=1`)
-          .then((response) => response.json())
-          .then((data) => {
-              const pets = data.content || [];
-              setPets(pets);
-  
-              // Si hay mascotas, selecciona la primera por defecto
-              if (pets.length > 0) {
-                  setQuoteData((prevState) => ({
-                      ...prevState,
-                      petId: pets[0].idPet, // Seleccionar automáticamente la primera mascota
-                  }));
-              }
-          })
-          .catch((error) => console.error('Error fetching pets:', error));
-  
-      // Carga de servicios
-      fetch(`http://localhost:8080/api/services/search?status=1`)
-          .then((response) => response.json())
-          .then((data) => {
-              const services = data.content || [];
-              setServices(services);
-  
-              // Si hay servicios, selecciona el primero por defecto
-              if (services.length > 0) {
-                  setQuoteData((prevState) => ({
-                      ...prevState,
-                      serviceId: services[0].idService, // Seleccionar automáticamente el primer servicio
-                  }));
-              }
-          })
-          .catch((error) => console.error('Error fetching services:', error));
-  
-      // Carga de métodos de pago
-      fetch(`http://localhost:8080/api/metpags/active`)
-          .then((response) => {
-              if (!response.ok) throw new Error('Error al obtener métodos de pago');
-              return response.json();
-          })
-          .then((data) => {
-              const methods = data || [];
-              setPaymentMethods(methods);
-  
-              // Si hay métodos de pago, selecciona el primero por defecto
-              if (methods.length > 0) {
-                  setQuoteData((prevState) => ({
-                      ...prevState,
-                      metPagId: methods[0].idMetPag, // Seleccionar automáticamente el primer método de pago
-                  }));
-              }
-          })
-          .catch((error) => console.error('Error fetching payment methods:', error));
-  }, []);
-  
+        const loadPaymentMethods = async () => {
+            try {
+                const methods = await fetchActivePaymentMethods();
+                setPaymentMethods(methods);
+                if (methods.length > 0) {
+                    setQuoteData((prevState) => ({
+                        ...prevState,
+                        metPagId: methods[0].idMetPag,
+                    }));
+                }
+            } catch (error) {
+                console.error("Error al cargar los métodos de pago:", error);
+                setGlobalError("Error al cargar los métodos de pago.");
+            }
+        };
+
+        loadPaymentMethods();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -85,17 +54,60 @@ function ModelNewQuote({ onClose, onUpdate }) {
         }));
     };
 
+    const handleFindPet = async () => {
+        if (!quoteData.petId.trim()) {
+            setPetMessage("Por favor, ingrese un ID de mascota válido.");
+            return;
+        }
+
+        try {
+            const message = await getPetNameById(quoteData.petId);
+            setPetMessage(message);
+        } catch (error) {
+            console.error("Error al buscar la mascota:", error);
+            const errorMessage = error?.includes("muerta")
+                ? "Mascota encontrada pero está marcada como muerta."
+                : "Mascota no encontrada.";
+            setPetMessage(errorMessage);
+        }
+    };
+
+    const handleFindService = async () => {
+        if (!quoteData.serviceId.trim()) {
+            setServiceMessage("Por favor, ingrese un nombre de servicio válido.");
+            return;
+        }
+
+        try {
+            const serviceData = await searchServicesByName(quoteData.serviceId);
+            const service = serviceData.content[0]; // Primer resultado
+            if (service) {
+                setServiceMessage(`Servicio encontrado: ${service.name}`);
+                setQuoteData((prevState) => ({
+                    ...prevState,
+                    serviceId: service.idService,
+                }));
+                setTimeStep(service.category.timeSpan || "00:15:00");
+            } else {
+                setServiceMessage("No se encontró un servicio con el nombre proporcionado.");
+            }
+        } catch (error) {
+            console.error("Error al buscar el servicio:", error);
+            setServiceMessage("Ocurrió un error al buscar el servicio.");
+        }
+    };
+
     const validateForm = () => {
         const newErrors = {};
-        if (!quoteData.petId) newErrors.petId = 'Selecciona una mascota.';
-        if (!quoteData.serviceId) newErrors.serviceId = 'Selecciona un servicio.';
-        if (!quoteData.metPagId) newErrors.metPagId = 'Selecciona un método de pago.';
-        if (!quoteData.date) newErrors.date = 'Selecciona una fecha.';
-        if (!quoteData.hour) newErrors.hour = 'Selecciona una hora.';
+        if (!quoteData.petId) newErrors.petId = "Selecciona una mascota.";
+        if (!quoteData.serviceId) newErrors.serviceId = "Selecciona un servicio.";
+        if (!quoteData.metPagId) newErrors.metPagId = "Selecciona un método de pago.";
+        if (!quoteData.date) newErrors.date = "Selecciona una fecha.";
+        if (!quoteData.hour) newErrors.hour = "Selecciona una hora.";
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const newErrors = validateForm();
@@ -115,30 +127,18 @@ function ModelNewQuote({ onClose, onUpdate }) {
             status: quoteData.status,
         };
 
-        console.log('Datos formateados de la cita:', formattedData);
-
-        fetch(`http://localhost:8080/api/quotes/create`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formattedData),
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Error al crear la cita.');
-                }
-                return response.text();
-            })
-            .then(() => {
-                alert('Cita creada exitosamente.');
-                onUpdate();
-                onClose();
-            })
-            .catch((error) => {
-                console.error('Error creating quote:', error);
-                alert('Error al crear la cita.');
-            });
+        try {
+            await createQuote(formattedData);
+            alert("Cita creada exitosamente.");
+            onUpdate();
+            onClose();
+        } catch (error) {
+            console.error("Error al crear la cita:", error);
+            const errorMessage = error?.includes("Capacidad máxima alcanzada")
+                ? "Capacidad máxima alcanzada para la fecha y hora seleccionadas."
+                : "Error al crear la cita.";
+            setGlobalError(errorMessage);
+        }
     };
 
     return (
@@ -156,32 +156,63 @@ function ModelNewQuote({ onClose, onUpdate }) {
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                        <SelectImput
-                            label="Mascota"
-                            name="petId"
-                            value={quoteData.petId}
-                            onChange={handleChange}
-                            options={pets.map((pet) => ({
-                                value: pet.idPet,
-                                label: pet.name,
-                            }))}
-                        />
-                            {errors.petId && <p className="text-danger">{errors.petId}</p>}
-                            
-                            <SelectImput
-                                label="Servicio"
-                                name="serviceId"
-                                value={quoteData.serviceId}
+                            {globalError && <p className="text-danger">{globalError}</p>}
+                            <Box_Text_Value
+                                Label="ID Mascota"
+                                V_Text={quoteData.petId}
                                 onChange={handleChange}
-                                options={services.map((service) => ({
-                                    value: service.idService,
-                                    label: service.name,
-                                }))}
+                                name="petId"
+                                required
                             />
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={handleFindPet}
+                            >
+                                Buscar Mascota
+                            </button>
+                            {petMessage && (
+                                <p
+                                    className={
+                                        petMessage.includes("muerta") ||
+                                        petMessage.includes("no encontrada")
+                                            ? "text-danger"
+                                            : "text-success"
+                                    }
+                                >
+                                    {petMessage}
+                                </p>
+                            )}
+                            {errors.petId && <p className="text-danger">{errors.petId}</p>}
 
+                            <Box_Text_Value
+                                Label="Nombre del Servicio"
+                                V_Text={quoteData.serviceId}
+                                onChange={handleChange}
+                                name="serviceId"
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={handleFindService}
+                            >
+                                Buscar Servicio
+                            </button>
+                            {serviceMessage && (
+                                <p
+                                    className={
+                                        serviceMessage.includes("error")
+                                            ? "text-danger"
+                                            : "text-success"
+                                    }
+                                >
+                                    {serviceMessage}
+                                </p>
+                            )}
                             {errors.serviceId && <p className="text-danger">{errors.serviceId}</p>}
-                            
-                            <SelectImput
+
+                            <SelectInput
                                 label="Método de Pago"
                                 name="metPagId"
                                 value={quoteData.metPagId}
@@ -192,25 +223,27 @@ function ModelNewQuote({ onClose, onUpdate }) {
                                 }))}
                             />
                             {errors.metPagId && <p className="text-danger">{errors.metPagId}</p>}
-                            
+
                             <DateTimePicker
                                 label="Fecha"
                                 type="date"
                                 name="date"
                                 value={quoteData.date}
                                 onChange={handleChange}
+                                dateRestriction="future"
                             />
                             {errors.date && <p className="text-danger">{errors.date}</p>}
-                            
+
                             <DateTimePicker
                                 label="Hora"
                                 type="time"
                                 name="hour"
                                 value={quoteData.hour}
                                 onChange={handleChange}
+                                timeStep={timeStep}
                             />
                             {errors.hour && <p className="text-danger">{errors.hour}</p>}
-                            
+
                             <Box_Text_Value
                                 Label="Comentarios"
                                 V_Text={quoteData.comments}

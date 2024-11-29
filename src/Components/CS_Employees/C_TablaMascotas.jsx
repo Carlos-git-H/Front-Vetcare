@@ -9,13 +9,14 @@ import ModalEditPet from '../../Layouts/LS_Employees/ModalPet/ModalEditPet';
 import ModalNewPet from '../../Layouts/LS_Employees/ModalPet/ModalNewPet';
 import L_InfoPet_Em from '../../Layouts/LS_Employees/L_InfoPet_Em';
 import C_Title from '../CS_General/C_Title/C_Title';
+import { searchPets, blockPet } from '../../Services/PetService';
 
 function C_TablaMascotas() {
-  const [pets, setPets] = useState([]); // Lista de mascotas
-  const [currentPage, setCurrentPage] = useState(0); // Página actual
-  const [totalPages, setTotalPages] = useState(0); // Total de páginas
+  const [pets, setPets] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [filters, setFilters] = useState({
-    status: '1', // Por defecto, mascotas activas
+    status: '1',
     dni: '',
     raceName: '',
     petName: '',
@@ -23,14 +24,9 @@ function C_TablaMascotas() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isNewPetModalOpen, setIsNewPetModalOpen] = useState(false);
   const [selectedPetId, setSelectedPetId] = useState(null);
-  const [selectedPetInfoId, setSelectedPetInfoId] = useState(null); // Para abrir información de mascota
+  const [selectedPetInfoId, setSelectedPetInfoId] = useState(null);
 
-  // Cargar mascotas activas al iniciar
-  useEffect(() => {
-    fetchPets(currentPage, { status: '1' }); // Por defecto, carga mascotas activas
-  }, [currentPage]);
-
-  // Función para calcular la edad
+  // Restaurar función calculateAge
   const calculateAge = (dateNac) => {
     const today = new Date();
     const birthDate = new Date(dateNac);
@@ -51,39 +47,21 @@ function C_TablaMascotas() {
     }
   };
 
-  // Función para obtener mascotas desde la API
-  const fetchPets = (page, customFilters = {}) => {
-    const { status, dni, raceName, petName } = { ...filters, ...customFilters };
+  useEffect(() => {
+    fetchPets(currentPage, filters);
+  }, [currentPage]);
 
-    const queryParams = new URLSearchParams({
-      page,
-      size: 9,
-      ...(status && { status }),
-      ...(dni && { dni }),
-      ...(raceName && { raceName }),
-      ...(petName && { petName }),
-    }).toString();
-
-    fetch(`http://localhost:8080/api/pets/search?${queryParams}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Error al obtener las mascotas');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.content) {
-          setPets(data.content); // Actualiza la tabla con los resultados
-          setTotalPages(data.totalPages); // Actualiza las páginas totales
-        } else {
-          setPets([]); // Limpia la tabla si no hay resultados
-          setTotalPages(0);
-        }
-      })
-      .catch((error) => console.error('Error:', error));
+  const fetchPets = async (page, customFilters = {}) => {
+    try {
+      const mergedFilters = { ...filters, ...customFilters };
+      const data = await searchPets(mergedFilters, page, 9);
+      setPets(data.content);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      console.error("Error al obtener mascotas:", error);
+    }
   };
 
-  // Manejar cambios en los filtros
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prevFilters) => ({
@@ -92,23 +70,19 @@ function C_TablaMascotas() {
     }));
   };
 
-  // Ejecutar búsqueda al dar clic en el botón
   const handleSearch = (e) => {
-    e.preventDefault(); // Evitar el comportamiento por defecto
-    setCurrentPage(0); // Reiniciar la paginación a la primera página
-    fetchPets(0, filters); // Realizar búsqueda con los filtros
+    e.preventDefault();
+    setCurrentPage(0);
+    fetchPets(0, filters);
   };
 
-  // Bloquear mascota
-  const handleBlockPet = (petId) => {
-    fetch(`http://localhost:8080/api/pets/${petId}/block`, {
-      method: 'PUT',
-    })
-      .then((response) => response.text())
-      .then(() => {
-        fetchPets(currentPage, { status: '1' }); // Actualizar mascotas activas
-      })
-      .catch((error) => console.error('Error al bloquear la mascota:', error));
+  const handleBlockPet = async (petId) => {
+    try {
+      await blockPet(petId);
+      fetchPets(currentPage, filters);
+    } catch (error) {
+      console.error('Error al bloquear la mascota:', error);
+    }
   };
 
   const openModal = (petId) => {
@@ -130,17 +104,17 @@ function C_TablaMascotas() {
   };
 
   const openPetInfo = (petId) => {
-    setSelectedPetInfoId(petId); // Guardar ID de mascota seleccionada para mostrar información
+    setSelectedPetInfoId(petId);
   };
 
   const closePetInfo = () => {
-    setSelectedPetInfoId(null); // Ocultar componente de información
+    setSelectedPetInfoId(null);
   };
 
   const styles = {
     flexButtonOptions: {
       display: 'flex',
-      alignItems: 'center'
+      alignItems: 'center',
     },
   };
 
@@ -148,9 +122,7 @@ function C_TablaMascotas() {
     <div>
       {!selectedPetInfoId ? (
         <>
-        
-        <C_Title nameTitle={"Gestión de Mascotas"}/>
-          {/* Formulario de búsqueda */}
+          <C_Title nameTitle="Gestión de Mascotas" />
           <form onSubmit={handleSearch} className="row">
             <div className="col">
               <div className="form-group">
@@ -201,7 +173,6 @@ function C_TablaMascotas() {
             </div>
           </form>
 
-          {/* Tabla de mascotas */}
           <table className="table">
             <thead>
               <tr>
@@ -262,12 +233,11 @@ function C_TablaMascotas() {
             </tbody>
           </table>
 
-          {/* Paginación */}
           <div className="d-flex justify-content-between align-items-center">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)} // Cambiar de página
+              onPageChange={(page) => setCurrentPage(page)}
             />
             <Btn_New
               nameId="btnAddNewPet"
@@ -280,18 +250,17 @@ function C_TablaMascotas() {
         <L_InfoPet_Em idPet={selectedPetInfoId} onClose={closePetInfo} />
       )}
 
-      {/* Modales */}
       {isModalOpen && (
         <ModalEditPet
           petId={selectedPetId}
           onClose={closeModal}
-          onUpdate={() => fetchPets(currentPage, { status: '1' })} // Actualizar mascotas activas
+          onUpdate={() => fetchPets(currentPage, filters)}
         />
       )}
       {isNewPetModalOpen && (
         <ModalNewPet
           onClose={closeNewPetModal}
-          onUpdate={() => fetchPets(currentPage, { status: '1' })} // Actualizar mascotas activas
+          onUpdate={() => fetchPets(currentPage, filters)}
         />
       )}
     </div>

@@ -8,6 +8,8 @@ import Box_Text_Empty from '../CS_General/Form Box/Box_Text/Box_Text_Empty';
 import ModalEditEmployee from '../../Layouts/LS_Employees/ModalEmployee/ModalEditEmployee';
 import ModalNewEmployee from '../../Layouts/LS_Employees/ModalEmployee/ModalNewEmployee';
 
+import { searchEmployees, blockEmployee } from '../../Services/employeeService';
+
 function C_TablaEmpleados() {
     const [employees, setEmployees] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
@@ -27,27 +29,18 @@ function C_TablaEmpleados() {
     }, [currentPage]);
 
     const fetchEmployees = (page, customFilters = {}) => {
-        const { dni, name, role, status } = { ...filters, ...customFilters };
+        const mergedFilters = { ...filters, ...customFilters };
 
-        const queryParams = new URLSearchParams({
-            page,
-            size: 9,
-            ...(dni && { dni }),
-            ...(name && { name }),
-            ...(role && { role }),
-            ...(status && { status }),
-        }).toString();
-
-        fetch(`http://localhost:8080/api/employees/search?${queryParams}`)
-            .then((response) => {
-                if (!response.ok) throw new Error('Error al obtener los empleados');
-                return response.json();
-            })
+        searchEmployees(mergedFilters, page)
             .then((data) => {
                 setEmployees(data.content || []);
                 setTotalPages(data.totalPages || 0);
             })
-            .catch((error) => console.error('Error:', error));
+            .catch((error) => {
+                console.error("Error al obtener los empleados:", error);
+                setEmployees([]);
+                setTotalPages(0);
+            });
     };
 
     const handleFilterChange = (e) => {
@@ -65,12 +58,13 @@ function C_TablaEmpleados() {
     };
 
     const handleBlockEmployee = (employeeId) => {
-        fetch(`http://localhost:8080/api/employees/${employeeId}/block`, { method: 'PUT' })
-            .then((response) => {
-                if (!response.ok) throw new Error('Error al bloquear el empleado');
+        blockEmployee(employeeId)
+            .then(() => {
                 fetchEmployees(currentPage);
             })
-            .catch((error) => console.error('Error al bloquear el empleado:', error));
+            .catch((error) => {
+                console.error("Error al bloquear el empleado:", error);
+            });
     };
 
     const openEditModal = (employeeId) => {
@@ -188,18 +182,20 @@ function C_TablaEmpleados() {
                                             showContent="icon"
                                             onEdit={() => openEditModal(employee.idEmployee)}
                                         />
-                                        <Btn_Delete
-                                            nameId={employee.idEmployee}
-                                            showContent="icon"
-                                            onDelete={() => handleBlockEmployee(employee.idEmployee)}
-                                        />
+                                        {employee.status === '1' && (
+                                            <Btn_Delete
+                                                nameId={employee.idEmployee}
+                                                showContent="icon"
+                                                onDelete={() => handleBlockEmployee(employee.idEmployee)}
+                                            />
+                                        )}
                                     </div>
                                 </td>
                             </tr>
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="7" className="text-center">No se encontraron empleados.</td>
+                            <td colSpan="9" className="text-center">No se encontraron empleados.</td>
                         </tr>
                     )}
                 </tbody>

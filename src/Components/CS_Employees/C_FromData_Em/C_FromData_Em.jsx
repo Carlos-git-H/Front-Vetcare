@@ -1,39 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import Box_Text_Bloq from '../../CS_General/Form Box/Box_Text/Box_Text_Bloq';
-import "./C_FromData_Em.css";
+import { getEmployeeById } from '../../../Services/employeeService';
 
 function C_FromData_Em() {
-    const [empleado, setEmpleado] = useState(null); // Estado para almacenar los datos del empleado
+    const [empleado, setEmpleado] = useState(null);  
+    const [errorMessage, setErrorMessage] = useState(""); 
 
     useEffect(() => {
-        // Obtiene el ID y tipo de usuario desde localStorage
-        const userId = localStorage.getItem('userId');
-        const userType = localStorage.getItem('userType');
-
-        if (!userId || userType !== 'empleado') {
-            console.error('Credenciales no válidas o tipo de usuario incorrecto');
-            return;
-        }
-
-        // Llamada al backend para obtener los datos del empleado
         const fetchEmpleado = async () => {
+            // Obtiene el ID y tipo de usuario desde localStorage
+            const userId = localStorage.getItem('userId');
+            const userType = localStorage.getItem('userType');
+
+            if (!userId || userType !== 'empleado') {
+                console.error('Credenciales no válidas o tipo de usuario incorrecto');
+                setErrorMessage("Credenciales no válidas o tipo de usuario incorrecto.");
+                return;
+            }
+
             try {
-                const response = await fetch(`http://localhost:8080/api/employees/${userId}`);
-                if (!response.ok) {
-                    throw new Error('Error al obtener los datos del empleado');
-                }
-                const data = await response.json();
-                setEmpleado(data); // Asigna los datos obtenidos al estado
+                const data = await getEmployeeById(userId); 
+                setEmpleado(data); 
             } catch (error) {
                 console.error('Error al obtener los datos del empleado:', error);
+                setErrorMessage("Error al obtener los datos del empleado.");
             }
         };
 
-        fetchEmpleado(); // Ejecuta la función
-    }, []); // Se ejecuta solo una vez al montar el componente
+        fetchEmpleado(); 
+    }, []);  
+
+    if (errorMessage) {
+        return <p className="text-danger">{errorMessage}</p>; 
+    }
 
     if (!empleado) {
-        return <p>Cargando datos del empleado...</p>;
+        return <p>Cargando datos del empleado...</p>;  
     }
 
     return (

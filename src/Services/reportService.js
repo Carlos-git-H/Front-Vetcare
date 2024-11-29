@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BASE_URL = "http://localhost:8080/api/report";
+
+const API_BASE_URL = import.meta.env.VITE_SERVER_BACK_URL;
+const API_URL = `${API_BASE_URL}/api/report`;
+
 
 // Función para generar el reporte
 export const generateReport = async (filters) => {
@@ -11,7 +14,7 @@ export const generateReport = async (filters) => {
     const queryParams = new URLSearchParams(sanitizedFilters).toString();
 
     try {
-        const response = await axios.get(`${BASE_URL}/generate-report?${queryParams}`, {
+        const response = await axios.get(`${API_URL}/generate-report?${queryParams}`, {
         responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -41,7 +44,7 @@ export const fetchQuotes = async (filters, page = 0, size = 9) => {
     }).toString();
 
     try {
-        const response = await axios.get(`${BASE_URL}/search?${queryParams}`);
+        const response = await axios.get(`${API_URL}/search?${queryParams}`);
         return response.data;
     } catch (error) {
         console.error("Error al obtener las citas:", error);

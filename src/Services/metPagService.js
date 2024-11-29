@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/metpags';
+// Asegúrate de definir API_BASE_URL antes de usarla
+const API_BASE_URL = import.meta.env.VITE_SERVER_BACK_URL;
+
+const API_URL = `${API_BASE_URL}/api/metpags`;
 
 // Método para obtener métodos de pago activos
 export const fetchActivePaymentMethods = async () => {
@@ -12,3 +15,4 @@ export const fetchActivePaymentMethods = async () => {
         throw error;
     }
 };
+

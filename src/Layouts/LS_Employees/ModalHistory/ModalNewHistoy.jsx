@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "../../../Layouts/Layouts.css";
 import Box_Text_Value from "../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value";
+import { createClinicalHistory } from "../../../Services/historyClinService.js";
+import { searchServiceByName} from "../../../Services/serviceService.js";
 
 function ModalNewHistory({ idPet, onClose, onUpdate }) {
   const [historyData, setHistoryData] = useState({
@@ -25,41 +27,34 @@ function ModalNewHistory({ idPet, onClose, onUpdate }) {
   };
 
   // Busca servicio por nombre
-  const handleFindService = () => {
+  const handleFindService = async () => {
     if (!historyData.serviceName) {
       setServiceError("Por favor, ingrese un nombre de servicio válido.");
       return;
     }
 
-    fetch(`http://localhost:8080/api/services/search?name=${historyData.serviceName}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Error al buscar el servicio.");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.content && data.content.length > 0) {
-          const service = data.content[0];
-          setHistoryData((prevState) => ({
-            ...prevState,
-            serviceId: service.idService, // Asignar ID del servicio encontrado
-          }));
-          setServiceData(service);
-          setServiceError(null);
-        } else {
-          setServiceError("No se encontró un servicio con el nombre proporcionado.");
-          setServiceData(null);
-        }
-      })
-      .catch((error) => {
-        console.error("Error en la búsqueda del servicio:", error);
-        setServiceError("Ocurrió un error al buscar el servicio.");
+    try {
+      const services = await searchServiceByName(historyData.serviceName);
+      if (services.length > 0) {
+        const service = services[0];
+        setHistoryData((prevState) => ({
+          ...prevState,
+          serviceId: service.idService, // Asignar ID del servicio encontrado
+        }));
+        setServiceData(service);
+        setServiceError(null);
+      } else {
+        setServiceError("No se encontró un servicio con el nombre proporcionado.");
         setServiceData(null);
-      });
+      }
+    } catch (error) {
+      console.error("Error en la búsqueda del servicio:", error);
+      setServiceError("Ocurrió un error al buscar el servicio.");
+      setServiceData(null);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!historyData.serviceId) {
@@ -67,32 +62,19 @@ function ModalNewHistory({ idPet, onClose, onUpdate }) {
       return;
     }
 
-    fetch(`http://localhost:8080/api/pet-clinical-history`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      await createClinicalHistory({
         ...historyData,
         serviceEntity: { idService: historyData.serviceId },
         pet: { idPet: historyData.petId },
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Error al guardar el historial clínico.");
-        }
-        return response.text();
-      })
-      .then(() => {
-        alert("Historial clínico creado exitosamente.");
-        onUpdate(); // Actualiza la tabla
-        onClose(); // Cierra el modal
-      })
-      .catch((error) => {
-        console.error("Error al guardar el historial clínico:", error);
-        alert("Error al guardar el historial clínico.");
       });
+      alert("Historial clínico creado exitosamente.");
+      onUpdate(); // Actualiza la tabla
+      onClose(); // Cierra el modal
+    } catch (error) {
+      console.error("Error al guardar el historial clínico:", error);
+      alert("Error al guardar el historial clínico.");
+    }
   };
 
   return (
