@@ -42,3 +42,26 @@
 .caracterT {
     margin-top: 5px;
 }
+
+@media (max-width: 800px) {
+    .container {
+        padding: 0;
+    }
+    .imagenProfile img {
+        width: 70px;
+        height: 70px;
+    }
+    .preview {
+        padding: 0;
+        padding-bottom: 10px;
+    }
+}
+@media (max-width: 500px) {
+    .contentData .row {
+        flex-direction: column; /* Cambia las filas a una disposición vertical */
+    }
+
+    .col {
+        flex: 1 1 100%; /* Ocupa todo el ancho disponible */
+    }
+}

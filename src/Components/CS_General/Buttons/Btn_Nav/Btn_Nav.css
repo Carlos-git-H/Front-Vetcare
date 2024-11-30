@@ -6,18 +6,25 @@
     padding: 10px;
     font-size: 15px;
     font-weight: 300;
-    white-space: nowrap;
-    text-align: left; 
-    cursor: pointer; 
-    width: 100%; 
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
     display: flex;
-    align-items: center; 
+    align-items: center;
 }
 
 .nav-button .material-symbols-outlined {
-    margin-right: 10px; 
+    margin-right: 10px;
     vertical-align: middle;
 }
-.material-symbols-outlined {
-    color: white;
+
+@media (max-width: 800px) {
+    .nav-button {
+        font-size: 0;
+        justify-content: center;
+    }
+
+    .nav-button span {
+        margin-right: 0;
+    }
 }

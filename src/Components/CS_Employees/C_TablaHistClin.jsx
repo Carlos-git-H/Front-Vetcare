@@ -77,6 +77,7 @@ function C_TablaHistClin({ petId }) {
         <div>
             <h3>Historial Médico</h3>
             {/* Tabla de historial clínico */}
+            <div className="table-responsive">
             <table className="table">
                 <thead>
                     <tr>
@@ -142,6 +143,7 @@ function C_TablaHistClin({ petId }) {
                     )}
                 </tbody>
             </table>
+            </div>
 
             {/* Paginación */}
             <div className="d-flex justify-content-between align-items-center">

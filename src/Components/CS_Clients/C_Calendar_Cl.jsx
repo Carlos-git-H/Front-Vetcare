@@ -41,12 +41,34 @@ function C_Calendar_Cl({ clientId }) {
     };
 
     return (
-        <div>
+        <div className="calendar-container">
             <FullCalendar
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                 initialView="dayGridMonth"
+                headerToolbar={{
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                }}
+                aspectRatio={1.5} // Relación de aspecto inicial
+                height="auto" // Ajusta la altura automáticamente
                 events={events} // Usa el estado correcto
                 eventClick={handleEventClick}
+                views={{
+                    dayGridMonth: {
+                        dayMaxEvents: 2, // Muestra un máximo de 2 eventos por día en pantallas pequeñas
+                    },
+                }}
+                responsive={{
+                    'max-width: 600px': { // Vistas personalizadas para pantallas pequeñas
+                        initialView: 'timeGridDay',
+                        headerToolbar: {
+                            left: 'prev,next',
+                            center: 'title',
+                            right: '',
+                        },
+                    },
+                }}
             />
 
             {isModalOpen && (

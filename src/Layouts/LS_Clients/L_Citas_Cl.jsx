@@ -112,20 +112,23 @@ function L_Citas_Cl() {
                     {appointments.length > 0 ? (
                         appointments.map((appointment) => (
                             <div key={appointment.idQuote} className='appointment-card'>
-                                <div className='appointment-icon'>
-                                    <img src='/Img/calendar_clock.svg' alt='' />
+                                <div className='content-appointment-card'> 
+                                    <div className='appointment-icon'>
+                                        <img src='/Img/calendar_clock.svg' alt='' />
+                                    </div>
+                                    <div className='appointment-info'>
+                                        <h5 className='appointment-title'>{appointment.service.name}</h5>
+                                        <p>Mascota: {appointment.pet.name}</p>
+                                        <p>
+                                            {new Date(appointment.date).toLocaleDateString()}{' '}
+                                            {new Date(appointment.date).toLocaleTimeString([], {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className='appointment-info'>
-                                    <h5 className='appointment-title'>{appointment.service.name}</h5>
-                                    <p>Mascota: {appointment.pet.name}</p>
-                                    <p>
-                                        {new Date(appointment.date).toLocaleDateString()}{' '}
-                                        {new Date(appointment.date).toLocaleTimeString([], {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                    </p>
-                                </div>
+                                
                                 <div className='appointment-actions'>
                                     <Btn_Info
                                         showContent='icon'

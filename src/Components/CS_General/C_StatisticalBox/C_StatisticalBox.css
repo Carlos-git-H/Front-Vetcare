@@ -21,3 +21,13 @@
     font-weight: 500;
     margin-top: 20px;
 }
+
+@media (max-width: 600px) {
+    .Estadistica{
+        width:150px ;
+        height: 85px;
+    }
+    .NumberStatistical{
+        margin-top: 0px;
+    }
+}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import "../CS_Employees/C_FromData_Em/C_FromData_Em.css";
 import Box_Text_Bloq from '../CS_General/Form Box/Box_Text/Box_Text_Bloq';
 import { getClientById } from '../../Services/clientService'; // Ajusta la ruta según tu estructura
-
+import "./Calendar.css"
 function C_FromData_Cl() {
     const [cliente, setCliente] = useState(null); // Estado para almacenar los datos del cliente
     const [error, setError] = useState(null); // Estado para manejar errores

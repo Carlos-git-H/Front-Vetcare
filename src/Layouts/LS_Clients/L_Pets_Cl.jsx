@@ -6,7 +6,7 @@ import Btn_Delete from "../../Components/CS_General/Buttons/Btn_Delete";
 import ModalNewPet_Cl from "../LS_Clients/ModelPets/ModalNewPet_Cl";
 import Btn_New from "../../Components/CS_General/Buttons/Btn_New";
 import L_InfoPet_Em from "../LS_Employees/L_InfoPet_Em";
-import { fetchPetsByClientId, blockPet } from "../../Services/PetService";
+import { fetchPetsByClientId, blockPet } from "../../Services/petService";
 import ModalEditPet from "../LS_Employees/ModalPet/ModalEditPet"
 import "./LS_Client.css";
 
@@ -119,13 +119,18 @@ function L_Pets_Cl() {
               {pets.length > 0 ? (
                 pets.map((pet) => (
                   <div key={pet.idPet} className="pet-card">
-                    <img
-                      src={`/Img/${pet.race.especie.name}.webp`}
-                      alt={`Foto de ${pet.name}`}
-                    />
-                    <h3>{pet.name}</h3>
-                    <p>Raza: {pet.race.name}</p>
-                    <p>Edad: {calculateAge(pet.dateNac)}</p>
+                    <div className="content-pet-card">
+                      <img
+                        src={`/Img/${pet.race.especie.name}.webp`}
+                        alt={`Foto de ${pet.name}`}
+                      />
+                      <div> 
+                        <h3>{pet.name}</h3>
+                        <p>Raza: {pet.race.name}</p>
+                        <p>Edad: {calculateAge(pet.dateNac)}</p>
+                      </div>
+                    </div>
+                    
                     <div
                       className="flex_button_options"
                       style={{ display: "flex", alignItems: "center" }}

@@ -7,7 +7,9 @@ import L_Pets_Cl from '../Layouts/LS_Clients/L_Pets_Cl';
 import L_Services_Cl from '../Layouts/LS_Clients/L_Services_Cl';
 import L_Notifications_Cl from '../Layouts/LS_Clients/L_Notifications_Cl';
 import L_Citas_Cl from '../Layouts/LS_Clients/L_Citas_Cl';
-import "./Vistas.css"
+import "./Vistas.css";
+import L_Herramientas_Cl from '../Layouts/LS_Clients/L_Herramientas_Cl';
+import { getClientById } from '../Services/clientService'; // Importa el método desde el servicio
 
 function V_Client() {
   const [clientData, setClientData] = useState(null);
@@ -33,14 +35,11 @@ function V_Client() {
     // Llamada al backend para obtener datos del cliente
     const fetchClientData = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/clients/${userId}`);
-        if (!response.ok) {
-          throw new Error('Error al obtener los datos del cliente');
-        }
-        const data = await response.json();
-        setClientData(data); // Guardar los datos del cliente
+        const data = await getClientById(userId); // Llama al método de Axios
+        setClientData(data); // Guarda los datos del cliente
       } catch (error) {
         console.error('Error al obtener los datos del cliente:', error);
+        alert('Error al obtener los datos del cliente. Redirigiendo al inicio de sesión.');
         setRedirect('/login'); // Redirigir al login si ocurre un error
       }
     };
@@ -54,11 +53,9 @@ function V_Client() {
 
   return (
     <div className='layout-container'>
-
       <div className='layout-aside'>
         {/* Mostrar el componente C_Aside_Cl solo si los datos del cliente están disponibles */}
-        {clientData && <C_Aside_Cl nameCliente={clientData.firstName+" "+clientData.firstLastName} />}
-      
+        {clientData && <C_Aside_Cl nameCliente={`${clientData.firstName} ${clientData.firstLastName}`} />}
       </div>
       
       <div className='layout-content'>
@@ -70,6 +67,7 @@ function V_Client() {
             <Route path="servicios/*" element={<L_Services_Cl />} />
             <Route path="citas/*" element={<L_Citas_Cl />} />
             <Route path="notificaciones/*" element={<L_Notifications_Cl />} />
+            <Route path="herramientas/*" element={<L_Herramientas_Cl />} />
             <Route path="/" element={<Navigate to="agenda" />} />
           </Route>
         </Routes>

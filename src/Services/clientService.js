@@ -3,7 +3,6 @@ import axios from "axios";
 // desde .env
 const API_BASE_URL = import.meta.env.VITE_SERVER_BACK_URL;
 
-
 const API_URL = `${API_BASE_URL}/api/clients`;
 
 /*------------------Metodos para el Empleado--------------- */

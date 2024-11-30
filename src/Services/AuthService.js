@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/auth';
+const API_BASE_URL = import.meta.env.VITE_SERVER_BACK_URL;
+const API_URL = `${API_BASE_URL}/api/auth`;
 
 // Método para iniciar sesión
 export const login = async (email, password) => {

@@ -31,9 +31,9 @@ function L_Agenda_Cl() {
             <div className="Content_Layout">
                 <C_Title nameTitle="Agenda" />
                 <div className="contenido-agenda">
-                    <div className="">
+                    <div className="content-contenido-agenda">
                         <C_StatisticalBox TitleStatistical="Citas de Hoy" NumberStatistical={todayActiveQuotes} />
-                        <C_StatisticalBox TitleStatistical="Total de Citas Activas" NumberStatistical={totalActiveQuotes} />
+                        <C_StatisticalBox TitleStatistical="Total de Citas" NumberStatistical={totalActiveQuotes} />
                     </div>
                     <div className="full-calendar">
                         <C_Calendar_Cl clientId={clientId} />
