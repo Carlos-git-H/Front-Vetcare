@@ -5,7 +5,7 @@ import Btn_Logout from '../../CS_General/Buttons/Btn_Logout/Btn_Logout'
 import Btn_Nav from '../../CS_General/Buttons/Btn_Nav/Btn_Nav'
 import Btn_Nav_Active from '../../CS_General/Buttons/Btn_Nav_Active/Btn_Nav_Active'
 
-function C_Aside_Em({nameEmpleado}) {
+function C_Aside_Em({nameEmpleado, rol}) {
   return (
     <aside className="sidebar">
         <ul className="nav">
@@ -22,11 +22,15 @@ function C_Aside_Em({nameEmpleado}) {
                 </li>
             </Link>
             
-            <Link to={"empleados"} className="no-underline">
-                <li className="option-nav">
-                    <Btn_Nav nameOption={"Empleados"} nameIcon={"Group"}/>
-                </li>
-            </Link>
+            {rol === 'Administrator' && (
+                <>
+                    <Link to={"empleados"} className="no-underline">
+                        <li className="option-nav">
+                            <Btn_Nav nameOption={"Empleados"} nameIcon={"Group"}/>
+                        </li>
+                    </Link>
+                </>
+            )}
 
             <Link to={"clientes"} className="no-underline">
                 <li className="option-nav">
@@ -54,12 +58,33 @@ function C_Aside_Em({nameEmpleado}) {
                 </li>
             </Link>
 
+            {rol === 'Administrator' && (
+                <>
+                    <Link to={"reportes"} className="no-underline">
+                        <li className="option-nav">
+                            <Btn_Nav nameOption={"Reportes"} nameIcon={"Draft"}/>
+                        </li>
+                    </Link>
 
-            <Link to={"reportes"} className="no-underline">
-                <li className="option-nav">
-                    <Btn_Nav nameOption={"Reportes"} nameIcon={"Draft"}/>
-                </li>
-            </Link>
+                    <Link to={"especies"} className="no-underline">
+                        <li className="option-nav">
+                            <Btn_Nav nameOption={"Especies"} nameIcon={"Raven"}/>
+                        </li>
+                    </Link>
+
+                    <Link to={"razas"} className="no-underline">
+                        <li className="option-nav">
+                            <Btn_Nav nameOption={"Razas"} nameIcon={"Sound_Detection_Dog_Barking"}/>
+                        </li>
+                    </Link>
+
+                    <Link to={"categorias"} className="no-underline">
+                        <li className="option-nav">
+                            <Btn_Nav nameOption={"Categorias"} nameIcon={"Category"}/>
+                        </li>
+                    </Link>
+                </>
+            )}
 
         </ul>
         <Link to="/login"><Btn_Logout></Btn_Logout></Link>

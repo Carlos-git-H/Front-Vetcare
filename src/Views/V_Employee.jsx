@@ -11,6 +11,9 @@ import L_Clients_Em from '../Layouts/LS_Employees/L_Clients_Em';
 import L_Employees_Em from '../Layouts/LS_Employees/L_Employees_Em';
 import { getEmployeeById } from '../Services/employeeService'; // Importa el método desde el servicio
 import './Vistas.css';
+import L_Especie_Em from '../Layouts/LS_Employees/L_Especie_Em';
+import L_Race_Em from '../Layouts/LS_Employees/L_Race_Em';
+import L_Categoria_Em from '../Layouts/LS_Employees/L_Categoria_Em';
 
 function V_Employee() {
   const [employeeData, setEmployeeData] = useState(null);
@@ -56,7 +59,7 @@ function V_Employee() {
     <div className='layout-container'>
       <div className='layout-aside'>
         {/* Mostrar el componente C_Aside_Em solo si los datos del empleado están disponibles */}
-        {employeeData && <C_Aside_Em nameEmpleado={employeeData.firstName} />}
+        {employeeData && <C_Aside_Em nameEmpleado={employeeData.firstLastName} rol={employeeData.rol.name} />}
       </div>
 
       <div className='layout-content'>
@@ -70,6 +73,9 @@ function V_Employee() {
             <Route path="empleados/*" element={<L_Employees_Em />} />
             <Route path="clientes/*" element={<L_Clients_Em />} />
             <Route path="reportes/*" element={<L_Reports_Em />} />
+            <Route path="especies/*" element={<L_Especie_Em />} />      
+            <Route path="razas/*" element={<L_Race_Em />} />        
+            <Route path="categorias/*" element={<L_Categoria_Em />} />
             <Route path="/" element={<Navigate to="agenda" />} />
           </Route>
         </Routes>

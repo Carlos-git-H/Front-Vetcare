@@ -14,3 +14,59 @@ export const searchEspecieByName = async (name) => {
         throw error;
     }
 };
+
+
+// Crear especie
+export const createEspecie = async (especieData) => {
+    try {
+        const response = await axios.post(API_URL, especieData);
+        return response.data;
+    } catch (error) {
+        console.error("Error al crear especie:", error);
+        throw error;
+    }
+};
+
+// Actualizar especie
+export const updateEspecie = async (id, especieData) => {
+    try {
+        const response = await axios.put(`${API_URL}/${id}`, especieData);
+        return response.data;
+    } catch (error) {
+        console.error("Error al actualizar especie:", error);
+        throw error;
+    }
+};
+
+// Listar especies activas con paginación
+export const listActiveEspecies = async (page = 0, size = 10) => {
+    try {
+      const response = await axios.get(`${API_URL}`, { params: { page, size } });
+      return response.data; // Aquí se espera un objeto con "content" y "totalPages"
+    } catch (error) {
+      console.error("Error al listar especies activas:", error);
+      throw error;
+    }
+  };
+  
+
+// Bloquear especie
+export const blockEspecie = async (id) => {
+    try {
+        await axios.patch(`${API_URL}/${id}/block`);
+    } catch (error) {
+        console.error("Error al bloquear especie:", error);
+        throw error;
+    }
+};
+
+// Obtener especie por ID
+export const getEspecieById = async (id) => {
+    try {
+        const response = await axios.get(`${API_URL}/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener especie por ID:", error);
+        throw error;
+    }
+};

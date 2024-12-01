@@ -3,9 +3,9 @@ import C_Title from '../../Components/CS_General/C_Title/C_Title';
 import C_FromData_Em from '../../Components/CS_Employees/C_FromData_Em/C_FromData_Em';
 import C_CardData from '../../Components/CS_Employees/C_CardData_Em/C_CardData';
 import Btn_Edit from '../../Components/CS_General/Buttons/Btn_Edit';
-
 import React, { useState, useEffect } from 'react';
 import ModalEditEmployee from "./ModalEmployee/ModalEditEmployee";
+import { getEmployeeById } from "../../Services/employeeService"; // Ajusta la ruta si es necesario
 
 function L_Profile_Em() {
     const [employee, setEmployee] = useState(null); // Estado para datos del empleado
@@ -25,14 +25,11 @@ function L_Profile_Em() {
         // Llamada al backend para obtener los datos del empleado
         const fetchEmployee = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/employees/${userId}`);
-                if (!response.ok) {
-                    throw new Error('Error al obtener los datos del empleado');
-                }
-                const data = await response.json();
+                const data = await getEmployeeById(userId); // Usa la función de servicio
                 setEmployee(data);
             } catch (error) {
                 console.error('Error al obtener los datos del empleado:', error);
+                alert(error);
             }
         };
 
