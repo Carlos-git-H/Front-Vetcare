@@ -7,8 +7,10 @@ function Btn_Logout() {
 
     const handleLogout = () => {
         // Eliminar datos del localStorage
-        localStorage.removeItem('userId');
+        localStorage.removeItem('authToken');
         localStorage.removeItem('userType');
+        localStorage.removeItem('userId');
+
 
         // Navegar a la página de login
         navigate('/login', { replace: true }); 

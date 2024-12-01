@@ -6,7 +6,14 @@ const API_URL = `${API_BASE_URL}/api/categories`;
 // Search category by name
 export const searchCategoryByName = async (name) => {
     try {
-        const response = await axios.get(`${API_URL}/search`, { params: { name } });
+        const token = localStorage.getItem('authToken'); 
+
+        const response = await axios.get(`${API_URL}/search`, {
+            params: { name },
+            headers: {
+                Authorization: `Bearer ${token}` // Agregar el token en el encabezado Authorization
+            }
+        });
         return response.data.content?.[0] || null; // Return first match or null
     } catch (error) {
         console.error("Error al buscar categoría:", error);
@@ -17,7 +24,12 @@ export const searchCategoryByName = async (name) => {
 // Crear categoría
 export const createCategory = async (categoryData) => {
     try {
-        const response = await axios.post(API_URL, categoryData);
+        const token = localStorage.getItem('authToken'); 
+
+        const response = await axios.post(API_URL, categoryData,{
+            headers: {
+                Authorization: `Bearer ${token}` // Agregar el token en el encabezado Authorization
+            }});
         return response.data;
     } catch (error) {
         console.error("Error al crear categoría:", error);
@@ -28,7 +40,13 @@ export const createCategory = async (categoryData) => {
 // Actualizar categoría
 export const updateCategory = async (id, categoryData) => {
     try {
-        const response = await axios.put(`${API_URL}/${id}`, categoryData);
+        const token = localStorage.getItem('authToken'); 
+
+        const response = await axios.put(`${API_URL}/${id}`, categoryData,{
+            headers: {
+                Authorization: `Bearer ${token}` // Agregar el token en el encabezado Authorization
+            }}
+        );
         return response.data;
     } catch (error) {
         console.error("Error al actualizar categoría:", error);
@@ -39,7 +57,12 @@ export const updateCategory = async (id, categoryData) => {
 // Listar categorías activas con paginación
 export const listActiveCategories = async (page = 0, size = 10) => {
     try {
-        const response = await axios.get(API_URL, { params: { page, size } });
+        const token = localStorage.getItem('authToken'); 
+        const response = await axios.get(API_URL, { params: { page, size },
+            headers: {
+                Authorization: `Bearer ${token}` // Agregar el token en el encabezado Authorization
+            }
+         });
         return response.data;
     } catch (error) {
         console.error("Error al listar categorías activas:", error);
@@ -50,7 +73,13 @@ export const listActiveCategories = async (page = 0, size = 10) => {
 // Bloquear categoría
 export const blockCategory = async (id) => {
     try {
-        await axios.patch(`${API_URL}/${id}/block`);
+        const token = localStorage.getItem('authToken'); 
+
+        await axios.patch(`${API_URL}/${id}/block`,{
+            headers: {
+                Authorization: `Bearer ${token}` // Agregar el token en el encabezado Authorization
+            }}
+        );
     } catch (error) {
         console.error("Error al bloquear categoría:", error);
         throw error;
@@ -60,7 +89,13 @@ export const blockCategory = async (id) => {
 // Obtener categoría por ID
 export const getCategoryById = async (id) => {
     try {
-        const response = await axios.get(`${API_URL}/${id}`);
+        const token = localStorage.getItem('authToken'); 
+
+        const response = await axios.get(`${API_URL}/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}` // Agregar el token en el encabezado Authorization
+            }}
+        );
         return response.data;
     } catch (error) {
         console.error("Error al obtener categoría por ID:", error);

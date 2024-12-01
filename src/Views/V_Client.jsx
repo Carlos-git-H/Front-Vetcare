@@ -18,19 +18,21 @@ function V_Client() {
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     const userType = localStorage.getItem('userType');
-
+    const Token = localStorage.getItem('authToken');
     // Validar credenciales en localStorage
-    if (!userId || !userType) {
+    if (!Token) {
       alert('Sin credenciales. Redirigiendo al inicio de sesión.');
       setRedirect('/login');
       return;
+    }else{
+      if (userType !== 'cliente') {
+        alert('No eres un cliente. Redirigiendo...');
+        setRedirect('/empleado');
+        return;
+      }
     }
 
-    if (userType !== 'cliente') {
-      alert('No eres un cliente. Redirigiendo...');
-      setRedirect('/empleado');
-      return;
-    }
+    
 
     // Llamada al backend para obtener datos del cliente
     const fetchClientData = async () => {

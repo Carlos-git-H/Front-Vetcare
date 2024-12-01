@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import { Navigate } from 'react-router-dom';
 import { login } from '../../Services/AuthService';
 import "./V_Login.css";
@@ -20,22 +20,26 @@ function V_Login() {
         setError(''); 
 
         try {
-            const data = await login(email, password); 
-            console.log('Datos recibidos:', data);
+            const data = await login(email, password);
 
-            // Redirigir basado en el tipo de usuario
-            if (data.type === 'empleado') {
-                localStorage.setItem('userType', 'empleado'); 
-                localStorage.setItem('userId', data.id);  
+            // ** Almacenar el token en localStorage **
+            localStorage.setItem('authToken', data.token);
+
+            // Guardar la información del usuario en localStorage
+            if (data.user.type === 'empleado') {
+                localStorage.setItem('userType', 'empleado');
+                localStorage.setItem('userId', data.user.id);
                 setRedirect('/empleado');
-            } else if (data.type === 'cliente') {
-                localStorage.setItem('userType', 'cliente');  
-                localStorage.setItem('userId', data.id);  
+            } else if (data.user.type === 'cliente') {
+                localStorage.setItem('userType', 'cliente');
+                localStorage.setItem('userId', data.user.id);
                 setRedirect('/cliente');
+            } else {
+                setError('Tipo de usuario desconocido');
             }
         } catch (err) {
             console.error('Error en la autenticación:', err);
-            setError(err || 'Error desconocido.');  
+            setError('Correo o contraseña incorrectos.');  
         }
     };
 
