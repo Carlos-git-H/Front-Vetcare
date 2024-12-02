@@ -22,18 +22,23 @@ function V_Employee() {
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     const userType = localStorage.getItem('userType');
-
+    const Token = localStorage.getItem('authToken');
+    
     // Validar credenciales en localStorage
-    if (!userId || !userType) {
+    if (!Token) {
       alert('Sin credenciales. Redirigiendo al inicio de sesión.');
+              // Eliminar datos del localStorage
+              localStorage.removeItem('authToken');
+              localStorage.removeItem('userType');
+              localStorage.removeItem('userId');
       setRedirect('/login');
       return;
-    }
-
-    if (userType !== 'empleado') {
-      alert('No eres un empleado. Redirigiendo...');
-      setRedirect('/cliente');
-      return;
+    }else{
+      if (userType !== 'empleado') {
+        alert('No eres un empleado. Redirigiendo...');
+        setRedirect('/cliente');
+        return;
+      }
     }
 
     // Llamada al backend para obtener datos del empleado

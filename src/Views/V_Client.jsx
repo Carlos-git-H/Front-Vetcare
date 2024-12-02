@@ -19,9 +19,14 @@ function V_Client() {
     const userId = localStorage.getItem('userId');
     const userType = localStorage.getItem('userType');
     const Token = localStorage.getItem('authToken');
+
     // Validar credenciales en localStorage
-    if (!Token) {
+    if (!Token ) {
       alert('Sin credenciales. Redirigiendo al inicio de sesión.');
+              // Eliminar datos del localStorage
+              localStorage.removeItem('authToken');
+              localStorage.removeItem('userType');
+              localStorage.removeItem('userId');
       setRedirect('/login');
       return;
     }else{
