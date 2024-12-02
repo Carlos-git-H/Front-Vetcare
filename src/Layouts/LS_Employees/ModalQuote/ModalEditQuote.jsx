@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import SelectImput from "../../../Components/CS_General/Form Box/SelectImput/SelectImput";
 import DateTimePicker from "../../../Components/CS_General/Form Box/DateTimePicker/DateTimePicker";
 import Box_Text_Value from "../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value";
-import { getPetNameById } from "../../../Services/petService";
+import { getPetNameById } from "../../../Services/PetService";
 import { searchServicesByName } from "../../../Services/serviceService";
 import { fetchActivePaymentMethods } from "../../../Services/metPagService";
 import { getQuoteById, updateQuote } from "../../../Services/quotesService";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createQuote } from "../../../Services/quotesService";
-import { fetchActivePetsForClient } from "../../../Services/petService";
+import { fetchActivePetsForClient } from "../../../Services/PetService";
 import { fetchActivePaymentMethods } from "../../../Services/metPagService";
 import { getServiceById } from "../../../Services/serviceService";
 import DateTimePicker from "../../../Components/CS_General/Form Box/DateTimePicker/DateTimePicker";

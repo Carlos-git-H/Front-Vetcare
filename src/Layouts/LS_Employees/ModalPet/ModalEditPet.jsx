@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import "../../../Layouts/Layouts.css";
 import Box_Text_Value from '../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value';
 import HiddenInput from '../../../Components/CS_General/Form Box/Box_Text/HiddenInput';
-import { getPetById, updatePet } from "../../../Services/petService";
+import { getPetById, updatePet } from "../../../Services/PetService";
 import { searchClientByDni } from "../../../Services/clientService";
 import { searchRaceByName } from "../../../Services/raceService";
 
