@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import Box_Text_Value from "../../../Components/CS_General/Form Box/Box_Text/Box_Text_Value";
 import HiddenInput from "../../../Components/CS_General/Form Box/Box_Text/HiddenInput";
-import { createPet } from "../../../Services/petService";
-import { searchRaceByName } from "../../../Services/RaceService";
+import { createPet } from "../../../Services/PetService";
+import { searchRaceByName } from "../../../Services/raceService";
 
 function ModalNewPet_Cl({ clientId, onClose, onUpdate }) {
   const [petData, setPetData] = useState({
