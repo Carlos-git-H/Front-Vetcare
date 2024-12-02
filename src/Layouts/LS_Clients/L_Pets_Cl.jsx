@@ -6,7 +6,7 @@ import Btn_Delete from "../../Components/CS_General/Buttons/Btn_Delete";
 import ModalNewPet_Cl from "../LS_Clients/ModelPets/ModalNewPet_Cl";
 import Btn_New from "../../Components/CS_General/Buttons/Btn_New";
 import L_InfoPet_Em from "../LS_Employees/L_InfoPet_Em";
-import { fetchPetsByClientId, blockPet } from "../../Services/petService";
+import { fetchPetsByClientId, blockPet } from "../../Services/PetService.js";
 import ModalEditPet from "../LS_Employees/ModalPet/ModalEditPet"
 import "./LS_Client.css";
 
