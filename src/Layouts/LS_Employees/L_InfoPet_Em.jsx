@@ -3,7 +3,7 @@ import C_Title from '../../Components/CS_General/C_Title/C_Title';
 import React, { useEffect, useState } from 'react';
 import Box_Text_Bloq from "../../Components/CS_General/Form Box/Box_Text/Box_Text_Bloq";
 import C_TablaHistClin from "../../Components/CS_Employees/C_TablaHistClin";
-import { getPetById } from "../../Services/petService";
+import { getPetById } from "../../Services/PetService";
 
 function L_InfoPet_Em({ idPet, onClose }) { // Recibe idPet y onClose como argumentos
     const [petData, setPetData] = useState(null);
