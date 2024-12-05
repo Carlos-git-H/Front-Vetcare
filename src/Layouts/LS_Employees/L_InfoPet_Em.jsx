@@ -3,21 +3,17 @@ import C_Title from '../../Components/CS_General/C_Title/C_Title';
 import React, { useEffect, useState } from 'react';
 import Box_Text_Bloq from "../../Components/CS_General/Form Box/Box_Text/Box_Text_Bloq";
 import C_TablaHistClin from "../../Components/CS_Employees/C_TablaHistClin";
+import { getPetById } from "../../Services/petService";
 
 function L_InfoPet_Em({ idPet, onClose }) { // Recibe idPet y onClose como argumentos
-    const [petData, setPetData] = useState(null); // Estado para almacenar los datos de la mascota
-    const [error, setError] = useState(null); // Estado para manejar errores
+    const [petData, setPetData] = useState(null);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (idPet) {
-            fetch(`http://localhost:8080/api/pets/${idPet}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Error al obtener los datos de la mascota.");
-                    }
-                    return response.json();
-                })
-                .then(data => {
+        const fetchPetData = async () => {
+            if (idPet) {
+                try {
+                    const data = await getPetById(idPet);
                     setPetData({
                         name: data.name,
                         owner: `${data.client.firstName} ${data.client.firstLastName}`,
@@ -29,12 +25,14 @@ function L_InfoPet_Em({ idPet, onClose }) { // Recibe idPet y onClose como argum
                         idPet: data.idPet,
                         comments: data.comments,
                     });
-                })
-                .catch(error => {
+                } catch (error) {
                     console.error("Error al obtener los datos de la mascota:", error);
-                    setError(error.message);
-                });
-        }
+                    setError(error);
+                }
+            }
+        };
+
+        fetchPetData();
     }, [idPet]);
 
     const calculateAge = (birthDate) => {
